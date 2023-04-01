@@ -1,5 +1,7 @@
 from typing import List
 
+from dns_records import Record, RecordClass, RecordType
+
 
 class DNSHeader:
     ID: int  # 2 bytes
@@ -18,11 +20,9 @@ class DNSHeader:
 
 
 class Question:
-    ...
-
-
-class Record:
-    ...
+    name: str
+    type: RecordType
+    ques_class: RecordClass
 
 
 class DNSPacket:
