@@ -1,5 +1,30 @@
 from typing import List
 
+
+class DNSHeader:
+    ID: int  # 2 bytes
+    query_or_response: bool
+    opcode: int  # 4 bits
+    is_authoritative_answer: bool
+    is_truncated_message: bool
+    is_recursion_desired: bool
+    is_recursion_available: bool
+    z_flag: int  # 3 bits
+    response_code: int  # 4 bits
+    question_count: int  # 2 bytes
+    answer_count: int  # 2 bytes
+    namserver_records_count: int  # 2 bytes
+    additional_records_count: int  # 2 bytes
+
+
+class Question:
+    ...
+
+
+class Record:
+    ...
+
+
 class DNSPacket:
     def __init__(self):
         self.header: DNSHeader = None
