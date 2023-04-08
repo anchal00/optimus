@@ -1,7 +1,7 @@
 from typing import List
 
 from dns_packet import DNSHeader, DNSPacket, Question
-from dns_records import Record
+from dns_records import Record, RecordClass, RecordType
 
 
 class Parser:
@@ -19,6 +19,20 @@ class Parser:
             data = data << 8 | x
             self.__increment_ptr(1)
         return data
+
+    def __parse_ques_name(self) -> str:
+        full_name: List = []
+        name_str: str = ''
+        # Parse sequence of labels to decode the Name
+        label_length: int = self.__parse_bytes_and_move_ahead(1)
+        while label_length != 0:
+            for _ in range(0, label_length):
+                label: int = self.__parse_bytes_and_move_ahead(1)
+                name_str = name_str + chr(label)
+            full_name.append(name_str)
+            name_str = ''
+            label_length: int = self.__parse_bytes_and_move_ahead(1)
+        return '.'.join(full_name)
 
     def __get_dns_header(self) -> DNSHeader:
         # Parse ID
@@ -64,7 +78,13 @@ class Parser:
         )
 
     def __get_ques_section(self) -> List[Question]:
-        ...
+        # Parse name
+        name: str = self.__parse_ques_name()
+        # Parse type
+        rtype: RecordType = RecordType.from_value(self.__parse_bytes_and_move_ahead(2))
+        # Parse class
+        qclass: RecordClass = RecordClass.from_value(self.__parse_bytes_and_move_ahead(2))
+        return Question(name, rtype, qclass)
 
     def __get_ans_section(self) -> List[Record]:
         ...

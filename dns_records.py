@@ -5,9 +5,21 @@ from ipaddress import IPv4Address
 class RecordType(Enum):
     A = 1  # 2 bytes : Represents IPv4 address of a host
 
+    def from_value(value: int):
+        for rec in RecordType:
+            if rec.value == value:
+                return rec.name
+        raise Exception("Could not find matching RecordType")
+
 
 class RecordClass(Enum):
     IN = 1  # 2 bytes : Represents Internet Class
+
+    def from_value(value: int):
+        for rec in RecordClass:
+            if rec.value == value:
+                return rec.name
+        raise Exception("Could not find matching RecordClass")
 
 
 class Record:

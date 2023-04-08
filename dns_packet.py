@@ -5,8 +5,21 @@ from dns_records import Record, RecordClass, RecordType
 
 class Question:
     name: str
-    type: RecordType
-    ques_class: RecordClass
+    rtype: RecordType
+    qclass: RecordClass
+
+    def __init__(self, name: str, rtype: RecordType, qclass: RecordClass) -> None:
+        self.name = name
+        self.rtype = rtype
+        self.qclass = qclass
+
+    def __repr__(self) -> str:
+        rep_dict = {
+            "name": self.name,
+            "type": self.rtype,
+            "class": self.qclass
+        }
+        return str(rep_dict)
 
 
 class DNSHeader:
