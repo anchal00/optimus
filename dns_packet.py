@@ -1,7 +1,6 @@
 from typing import List
 
 from dns_records import Record, RecordClass, RecordType
-from utils.parsing_utils import Parser
 
 
 class DNSHeader:
@@ -19,37 +18,34 @@ class DNSHeader:
     nameserver_records_count: int  # 2 bytes
     additional_records_count: int  # 2 bytes
 
-    def __init__(self, parser: Parser):
-        # Parse ID
-        self.ID = parser.parse_bytes_and_move_ahead(2)
-        bytes_data = parser.parse_bytes_and_move_ahead(2)
-        left_byte = bytes_data & 0xFF00
-        right_byte = bytes_data & 0xFF
-        # Parse QR
-        self.is_query = (left_byte & 1 << 7) != 0
-        # Parse OPCODE
-        self.opcode = (left_byte >> 3) & 0x0F
-        # Parse AA
-        self.is_authoritative_answer = left_byte & (1 << 2) != 0
-        # Parse TC
-        self.is_truncated_message = left_byte & (1 << 1) != 0
-        # Parse RD
-        self.is_recursion_desired = left_byte & 1 != 0
-        # Parse RA
-        self.is_recursion_available = right_byte & (1 << 7) != 0
-        # Parse Z
-        self.z_flag = (right_byte >> 4) & 7
-        # Parse RC
-        self.response_code = (right_byte >> 3) & 0x0F
-        # Parse Record counts
-        ques_count_data = parser.parse_bytes_and_move_ahead(2)
-        self.question_count = ques_count_data
-        ans_count_data = parser.parse_bytes_and_move_ahead(2)
-        self.answer_count = ans_count_data
-        ns_count_data = parser.parse_bytes_and_move_ahead(2)
-        self.nameserver_records_count = ns_count_data
-        ad_count_data = parser.parse_bytes_and_move_ahead(2)
-        self.additional_records_count = ad_count_data
+    def __init__(
+        self, id: int,
+        is_query: bool,
+        opcode: int,
+        is_authoritative_answer: bool,
+        is_truncated_message: bool,
+        is_recursion_desired: bool,
+        is_recursion_available: bool,
+        z_flag: int,
+        response_code: int,
+        question_count: int,
+        answer_count: int,
+        nameserver_records_count: int,
+        additional_records_count: int
+    ):
+        self.ID = id
+        self.is_query = is_query
+        self.opcode = opcode
+        self.is_authoritative_answer = is_authoritative_answer
+        self.is_truncated_message = is_truncated_message
+        self.is_recursion_desired = is_recursion_desired
+        self.is_recursion_available = is_recursion_available
+        self.z_flag = z_flag
+        self.response_code = response_code
+        self.question_count = question_count
+        self.answer_count = answer_count
+        self.nameserver_records_count = nameserver_records_count
+        self.additional_records_count = additional_records_count
 
     def __repr__(self) -> str:
         rep_dict = {
@@ -77,12 +73,15 @@ class Question:
 
 
 class DNSPacket:
-    def __init__(self):
-        self.header: DNSHeader = None
-        self.questions: List[Question] = None
-        self.answers: List[Record] = None
-        self.nameserver_records: List[Record] = None
-        self.additional_records: List[Record] = None
-
-    def create(self, parser: Parser):
-        self.header = DNSHeader(parser)
+    def __init__(
+        self, dns_header: DNSHeader,
+        questions: List[Question],
+        answers: List[Record],
+        nameserver_records: List[Record],
+        additional_records: List[Record]
+    ):
+        self.header = dns_header
+        self.questions = questions
+        self.answers = answers
+        self.nameserver_records = nameserver_records
+        self.additional_records = additional_records
