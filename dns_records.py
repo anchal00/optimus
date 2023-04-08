@@ -8,7 +8,7 @@ class RecordType(Enum):
     def from_value(value: int):
         for rec in RecordType:
             if rec.value == value:
-                return rec.name
+                return rec
         raise Exception("Could not find matching RecordType")
 
 
@@ -18,19 +18,53 @@ class RecordClass(Enum):
     def from_value(value: int):
         for rec in RecordClass:
             if rec.value == value:
-                return rec.name
+                return rec
         raise Exception("Could not find matching RecordClass")
 
 
 class Record:
     name: str
-    type: RecordType
+    rtype: RecordType
     rec_class: RecordClass
-    ttl: int  # 4 bytes : Time-to-Live
+    ttl: int  # 4 bytes : Time-to-Live in seconds
     length: int  # 2 bytes : Length of content in a concrete record
 
+    def __init__(
+        self, name: str,
+        rtype: RecordType,
+        rclass: RecordClass,
+        ttl: int,
+        length: int
+    ) -> None:
+        self.name = name
+        self.rtype = rtype
+        self.rec_class = rclass
+        self.ttl = ttl
+        self.length = length
 
-# Record Type - A
+
+# Record Type A, representing IPv4 address of a host
 class A(Record):
     address: IPv4Address
-    length = 4  # bytes
+
+    def __init__(
+        self, name: str,
+        rtype: RecordType,
+        rclass: RecordClass,
+        ttl: int,
+        length: int,
+        address: IPv4Address
+    ) -> None:
+        super().__init__(name, rtype, rclass, ttl, length)
+        self.address = address
+
+    def __repr__(self) -> str:
+        rep_dict = {
+            "name": self.name,
+            "type": self.rtype.name,
+            "class": self.rec_class.name,
+            "ttl": self.ttl,
+            "length": self.length,
+            "address": self.address
+        }
+        return str(rep_dict)

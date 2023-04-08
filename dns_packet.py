@@ -16,8 +16,8 @@ class Question:
     def __repr__(self) -> str:
         rep_dict = {
             "name": self.name,
-            "type": self.rtype,
-            "class": self.qclass
+            "type": self.rtype.name,
+            "class": self.qclass.name
         }
         return str(rep_dict)
 
