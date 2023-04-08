@@ -27,7 +27,6 @@ class Parser:
     def __parse_record_name(self) -> str:
         msb_data: int = self.__parse_bytes_and_move_ahead(1)
         if msb_data ^ 0xC0 == 0:
-            
             # If the First Byte (MSB) has two leftmost(MS) bits set then
             # the name is represented in Compressed format.
             # So in this case, the next byte should be treated as OFFSET
@@ -135,7 +134,11 @@ class Parser:
             raise Exception("Data not found")
         dns_header: DNSHeader = self.__get_dns_header()
         questions: List[Question] = self.__get_ques_section()
-        answers: List[Record] = self.__get_ans_section()
-        nameserver_records: List[Record] = self.__get_authoritative_section()
-        additional_records: List[Record] = self.__get_additional_section()
+        answers: List[Record] = None
+        nameserver_records: List[Record] = None
+        additional_records: List[Record] = None
+        if not dns_header.is_query:
+            answers = self.__get_ans_section()
+            nameserver_records = self.__get_authoritative_section()
+            additional_records = self.__get_additional_section()
         return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
