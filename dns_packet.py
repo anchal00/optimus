@@ -3,6 +3,12 @@ from typing import List
 from dns_records import Record, RecordClass, RecordType
 
 
+class Question:
+    name: str
+    type: RecordType
+    ques_class: RecordClass
+
+
 class DNSHeader:
     ID: int  # 2 bytes
     is_query: bool
@@ -66,12 +72,6 @@ class DNSHeader:
         return str(rep_dict)
 
 
-class Question:
-    name: str
-    type: RecordType
-    ques_class: RecordClass
-
-
 class DNSPacket:
     def __init__(
         self, dns_header: DNSHeader,
@@ -85,3 +85,13 @@ class DNSPacket:
         self.answers = answers
         self.nameserver_records = nameserver_records
         self.additional_records = additional_records
+
+    def __repr__(self) -> str:
+        rep_dict = {
+            "header": self.header,
+            "questions": self.questions,
+            "answers": self.answers,
+            "authoritative_records": self.nameserver_records,
+            "additional_records": self.additional_records
+        }
+        return str(rep_dict)

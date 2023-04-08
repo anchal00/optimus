@@ -20,7 +20,7 @@ class Parser:
             self.__increment_ptr(1)
         return data
 
-    def get_dns_header(self):
+    def __get_dns_header(self):
         # Parse ID
         id = self.__parse_bytes_and_move_ahead(2)
         bytes_data = self.__parse_bytes_and_move_ahead(2)
