@@ -1,7 +1,8 @@
+from ipaddress import IPv4Address
 from typing import List
 
 from dns_packet import DNSHeader, DNSPacket, Question
-from dns_records import Record, RecordClass, RecordType
+from dns_records import A, Record, RecordClass, RecordType
 
 
 class Parser:
@@ -12,6 +13,9 @@ class Parser:
     def __increment_ptr(self, steps: int) -> None:
         self.__ptr = self.__ptr + steps
 
+    def __seek_ptr_pos(self, pos: int) -> None:
+        self.__ptr = pos
+
     def __parse_bytes_and_move_ahead(self, bytes_to_parse: int) -> int:
         to_be_read_data_block = self.__bin_data_block[self.__ptr:]
         data = 0
@@ -20,11 +24,32 @@ class Parser:
             self.__increment_ptr(1)
         return data
 
-    def __parse_ques_name(self) -> str:
+    def __parse_record_name(self) -> str:
+        msb_data: int = self.__parse_bytes_and_move_ahead(1)
+        if msb_data ^ 0xC0 == 0:
+            
+            # If the First Byte (MSB) has two leftmost(MS) bits set then
+            # the name is represented in Compressed format.
+            # So in this case, the next byte should be treated as OFFSET
+            # which specifies the position from where the name has to be
+            # read
+            offset: int = self.__parse_bytes_and_move_ahead(1)
+            cur_ptr_pos: int = self.__ptr
+            self.__seek_ptr_pos(offset)
+            name: str = self.__parse_sequence_of_labels()
+            # Restore pointer to where it was
+            self.__seek_ptr_pos(cur_ptr_pos)
+            return name
+        return self.__parse_sequence_of_labels()
+
+    def __parse_sequence_of_labels(self) -> str:
         full_name: List = []
         name_str: str = ''
-        # Parse sequence of labels to decode the Name
+        # 2 MSB bits of the this label_length field are always 0
+        # So the label_length can have values between 0 and 63, meaning
+        # that the name can take only between 0-63 octets
         label_length: int = self.__parse_bytes_and_move_ahead(1)
+        # Parse sequence of labels to decode the Name
         while label_length != 0:
             for _ in range(0, label_length):
                 label: int = self.__parse_bytes_and_move_ahead(1)
@@ -79,15 +104,25 @@ class Parser:
 
     def __get_ques_section(self) -> List[Question]:
         # Parse name
-        name: str = self.__parse_ques_name()
+        name: str = self.__parse_sequence_of_labels()
         # Parse type
         rtype: RecordType = RecordType.from_value(self.__parse_bytes_and_move_ahead(2))
         # Parse class
         qclass: RecordClass = RecordClass.from_value(self.__parse_bytes_and_move_ahead(2))
-        return Question(name, rtype, qclass)
+        return list([Question(name, rtype, qclass)])  # TODO: Add support for parsing multiple Questions
 
     def __get_ans_section(self) -> List[Record]:
-        ...
+        name: str = self.__parse_record_name()
+        rtype: RecordType = RecordType.from_value(self.__parse_bytes_and_move_ahead(2))
+        rclass: RecordClass = RecordClass.from_value(self.__parse_bytes_and_move_ahead(2))
+        ttl: int = self.__parse_bytes_and_move_ahead(4)
+        length: int = self.__parse_bytes_and_move_ahead(2)
+        record: Record = None
+        # Parse record acc to RecordType
+        if rtype == RecordType.A:
+            ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(4)
+            record: Record = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
+        return list([record])  # TODO: Add support for parsing multiple Records
 
     def __get_additional_section(self) -> List[Record]:
         ...
