@@ -38,7 +38,7 @@ class DNSHeader:
         answer_count: int,
         nameserver_records_count: int,
         additional_records_count: int
-    ):
+    ) -> None:
         self.ID = id
         self.is_query = is_query
         self.opcode = opcode
@@ -79,7 +79,7 @@ class DNSPacket:
         answers: List[Record],
         nameserver_records: List[Record],
         additional_records: List[Record]
-    ):
+    ) -> None:
         self.header = dns_header
         self.questions = questions
         self.answers = answers

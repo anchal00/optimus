@@ -5,14 +5,14 @@ from dns_records import Record
 
 
 class Parser:
-    def __init__(self, bin_data: bytearray):
+    def __init__(self, bin_data: bytearray) -> None:
         self.__bin_data_block = bin_data
         self.__ptr = 0
 
-    def __increment_ptr(self, steps: int):
+    def __increment_ptr(self, steps: int) -> None:
         self.__ptr = self.__ptr + steps
 
-    def __parse_bytes_and_move_ahead(self, bytes_to_parse: int):
+    def __parse_bytes_and_move_ahead(self, bytes_to_parse: int) -> int:
         to_be_read_data_block = self.__bin_data_block[self.__ptr:]
         data = 0
         for x in to_be_read_data_block[:bytes_to_parse]:
@@ -20,7 +20,7 @@ class Parser:
             self.__increment_ptr(1)
         return data
 
-    def __get_dns_header(self):
+    def __get_dns_header(self) -> DNSHeader:
         # Parse ID
         id = self.__parse_bytes_and_move_ahead(2)
         bytes_data = self.__parse_bytes_and_move_ahead(2)
@@ -63,16 +63,16 @@ class Parser:
             additional_records_count
         )
 
-    def __get_ques_section(self):
+    def __get_ques_section(self) -> List[Question]:
         ...
 
-    def __get_ans_section(self):
+    def __get_ans_section(self) -> List[Record]:
         ...
 
-    def __get_additional_section(self):
+    def __get_additional_section(self) -> List[Record]:
         ...
 
-    def __get_authoritative_section(self):
+    def __get_authoritative_section(self) -> List[Record]:
         ...
 
     def get_dns_packet(self):
