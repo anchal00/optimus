@@ -101,16 +101,19 @@ class Parser:
             additional_records_count
         )
 
-    def __get_ques_section(self) -> List[Question]:
-        # Parse name
-        name: str = self.__parse_sequence_of_labels()
-        # Parse type
-        rtype: RecordType = RecordType.from_value(self.__parse_bytes_and_move_ahead(2))
-        # Parse class
-        qclass: RecordClass = RecordClass.from_value(self.__parse_bytes_and_move_ahead(2))
-        return list([Question(name, rtype, qclass)])  # TODO: Add support for parsing multiple Questions
+    def __get_ques_section(self, total_questions) -> List[Question]:
+        questions: List[Question] = []
+        for _ in range(0, total_questions):
+            # Parse name
+            name: str = self.__parse_sequence_of_labels()
+            # Parse type
+            rtype: RecordType = RecordType.from_value(self.__parse_bytes_and_move_ahead(2))
+            # Parse class
+            qclass: RecordClass = RecordClass.from_value(self.__parse_bytes_and_move_ahead(2))
+            questions.append(Question(name, rtype, qclass))
+        return questions
 
-    def __get_ans_section(self) -> List[Record]:
+    def __read_ans(self) -> Record:
         name: str = self.__parse_record_name()
         rtype: RecordType = RecordType.from_value(self.__parse_bytes_and_move_ahead(2))
         rclass: RecordClass = RecordClass.from_value(self.__parse_bytes_and_move_ahead(2))
@@ -121,7 +124,13 @@ class Parser:
         if rtype == RecordType.A:
             ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(4)
             record: Record = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
-        return list([record])  # TODO: Add support for parsing multiple Records
+        return record
+
+    def __get_ans_section(self, total_answers: int) -> List[Record]:
+        answers: List[Record] = []
+        for _ in range(0, total_answers):
+            answers.append(self.__read_ans())
+        return answers
 
     def __get_additional_section(self) -> List[Record]:
         ...
@@ -133,12 +142,15 @@ class Parser:
         if self.__bin_data_block is None:
             raise Exception("Data not found")
         dns_header: DNSHeader = self.__get_dns_header()
-        questions: List[Question] = self.__get_ques_section()
+        questions: List[Question] = self.__get_ques_section(dns_header.question_count)
         answers: List[Record] = None
-        nameserver_records: List[Record] = None
-        additional_records: List[Record] = None
+        nameserver_records: List[Record] = []
+        additional_records: List[Record] = []
         if not dns_header.is_query:
-            answers = self.__get_ans_section()
-            nameserver_records = self.__get_authoritative_section()
-            additional_records = self.__get_additional_section()
+            if dns_header.answer_count > 0:
+                answers = self.__get_ans_section(dns_header.answer_count)
+            if dns_header.nameserver_records_count > 0:
+                nameserver_records = self.__get_authoritative_section(dns_header.nameserver_records_count)
+            if dns_header.additional_records_count > 0:
+                additional_records = self.__get_additional_section()
         return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
