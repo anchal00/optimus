@@ -67,7 +67,7 @@ class Parser:
         # Parse QR
         is_query = msb_byte & (1 << 7) == 0
         # Parse OPCODE
-        opcode = (msb_byte >> 3) & 0x0F 
+        opcode = (msb_byte >> 3) & 0x0F
         # Parse AA
         is_authoritative_answer = msb_byte & (1 << 2) != 0
         # Parse TC
@@ -154,3 +154,34 @@ class Parser:
             if dns_header.additional_records_count > 0:
                 additional_records = self.__get_additional_section()
         return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
+
+    @staticmethod
+    def create_query_dns_packet(domain: str, recursion_desired: bool) -> bytearray:
+        dns_packet_bin: bytearray = bytearray(50)  # Use arbitrary packet size(50) for now
+        # Write 12 bytes DNS header
+        id: int = 15196  # TODO: Make it random 2 byte ID
+        # Represent Id in 2 byte format
+        id_msbyte: int = (id & 0xFF00) >> 8
+        id_lsbyte: int = (id & 0xFF)
+        dns_packet_bin[0] = id_msbyte
+        dns_packet_bin[1] = id_lsbyte
+        dns_packet_bin[2] = 1 if recursion_desired else 0
+        dns_packet_bin[3] = 0 ^ (1 << 5)
+        dns_packet_bin[5] = 1  # Set Question Count to 1
+        # Write Question in the DNS packet
+        labels = domain.split('.')
+        cur_pos = 12
+        for label in labels:
+            # Write label's length
+            dns_packet_bin[cur_pos] = len(label)
+            cur_pos += 1
+            for ch in label:
+                data = ord(ch) if ch != '.' else 0
+                dns_packet_bin[cur_pos] = data
+                cur_pos += 1
+        # Set Type and Class to 1 for now
+        cur_pos += 2
+        dns_packet_bin[cur_pos] = 1
+        cur_pos += 2
+        dns_packet_bin[cur_pos] = 1
+        return dns_packet_bin
