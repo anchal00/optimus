@@ -76,6 +76,7 @@ class DNSHeader:
             "is_recursion_desired": self.is_recursion_desired,
             "is_recursion_available": self.is_recursion_available,
             "z_flag": self.z_flag,
+            # TODO: create Response Enum
             "rcode": self.response_code,
             "question_count": self.question_count,
             "answer_count": self.answer_count,

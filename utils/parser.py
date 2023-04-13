@@ -11,7 +11,7 @@ class Parser:
         self.__ptr = 0
 
     def __increment_ptr(self, steps: int) -> None:
-        self.__ptr = self.__ptr + steps
+        self.__ptr += steps
 
     def __seek_ptr_pos(self, pos: int) -> None:
         self.__ptr = pos
@@ -62,12 +62,12 @@ class Parser:
         # Parse ID
         id = self.__parse_bytes_and_move_ahead(2)
         bytes_data = self.__parse_bytes_and_move_ahead(2)
-        msb_byte = bytes_data & 0xFF00
+        msb_byte = (bytes_data & 0xFF00) >> 8
         lsb_byte = bytes_data & 0xFF
         # Parse QR
-        is_query = (msb_byte >> 8) & (1 << 7) == 0
+        is_query = msb_byte & (1 << 7) == 0
         # Parse OPCODE
-        opcode = (msb_byte >> 3) & 0x0F
+        opcode = (msb_byte >> 3) & 0x0F 
         # Parse AA
         is_authoritative_answer = msb_byte & (1 << 2) != 0
         # Parse TC
