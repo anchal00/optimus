@@ -1,8 +1,8 @@
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address
 from typing import List
 
-from dns_packet import DNSHeader, DNSPacket, Question
-from dns_records import MX, A, Record, RecordClass, RecordType
+from dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
+from dns_records import AAAA, MX, NS, A, Record, RecordClass, RecordType
 
 
 class Parser:
@@ -98,7 +98,7 @@ class Parser:
         # Parse Z
         z_flag = (lsb_byte >> 4) & 7
         # Parse RC
-        response_code = (lsb_byte >> 3) & 0x0F
+        response_code = ResponseCode.from_value((lsb_byte >> 3) & 0x0F)
         # Parse Record counts
         question_count = self.__parse_bytes_and_move_ahead(2)
         answer_count = self.__parse_bytes_and_move_ahead(2)
@@ -132,7 +132,7 @@ class Parser:
             questions.append(Question(name, rtype, qclass))
         return questions
 
-    def __read_ans(self) -> Record:
+    def __read_response_records(self) -> Record:
         name: str = self.__parse_record_name()
         rtype: RecordType = RecordType.from_value(self.__parse_bytes_and_move_ahead(2))
         rclass: RecordClass = RecordClass.from_value(self.__parse_bytes_and_move_ahead(2))
@@ -142,26 +142,39 @@ class Parser:
         # Parse record acc to RecordType
         if rtype == RecordType.A:
             ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(4)
-            record: Record = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
+            record: Record = AAAA(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
+        if rtype == RecordType.AAAA:
+            ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(6)
+            record: Record = A(name, rtype, rclass, ttl, length, IPv6Address(ipv4_addr_int))
         elif rtype == RecordType.CNAME:
             from dns_records import CNAME
             record: Record = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
         elif rtype == RecordType.MX:
             record: Record = MX(name, rtype, rclass, ttl, length, self.__parse_bytes_and_move_ahead(2),
                                 self.__parse_record_name())
+        elif rtype == RecordType.NS:
+            record: Record = NS(name, rtype, rclass, ttl, length, self.__parse_record_name())
+        else:
+            record: Record = Record(name, rtype, rclass, ttl, length)
         return record
 
     def __get_ans_section(self, total_answers: int) -> List[Record]:
         answers: List[Record] = []
         for _ in range(0, total_answers):
-            answers.append(self.__read_ans())
+            answers.append(self.__read_response_records())
         return answers
 
     def __get_additional_section(self, additional_records_count: int) -> List[Record]:
-        ...
+        ad_records: List[Record] = []
+        for _ in range(0, additional_records_count):
+            ad_records.append(self.__read_response_records())
+        return ad_records
 
     def __get_authoritative_section(self, nameserver_records_count: int) -> List[Record]:
-        ...
+        ns_records: List[Record] = []
+        for _ in range(0, nameserver_records_count):
+            ns_records.append(self.__read_response_records())
+        return ns_records
 
     def get_dns_packet(self):
         if self.__bin_data_block is None:
@@ -205,11 +218,12 @@ class Parser:
                 data = ord(ch) if ch != '.' else 0
                 dns_packet_bin[cur_pos] = data
                 cur_pos += 1
-        # Set Type and Class to 1 for now
+        # Set Type (In 2 byte format)
         cur_pos += 1
         dns_packet_bin[cur_pos] = (record_type.value & 0xFF00) >> 8
         cur_pos += 1
         dns_packet_bin[cur_pos] = (record_type.value & 0xFF)
+        # Set Class to 1 for now
         cur_pos += 2
         dns_packet_bin[cur_pos] = 1
         return dns_packet_bin

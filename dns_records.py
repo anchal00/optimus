@@ -1,13 +1,13 @@
 from enum import Enum
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address
 
 
 class RecordType(Enum):  # 2 bytes
     A = 1  # Alias : IPv4 address of a host
     NS = 2  # Name Server : The DNS server address for a domain
-    CNAME = 5  # Canonical Name - Maps names to names
-    MX = 15  # Mail exchange - The host of the mail server for a domain
-    AAAA = 28  # IPv6 alias
+    CNAME = 5  # Canonical Name : Maps names to names
+    MX = 15  # Mail exchange : The host of the mail server for a domain
+    AAAA = 28  # IPv6 alias : IPv6 address of a host
     UNKNOWN = -1
 
     def from_value(value: int):
@@ -86,6 +86,33 @@ class A(Record):
         return str(rep_dict)
 
 
+# Record Type AAAA, representing IPv6 address of a host
+class AAAA(Record):
+    address: IPv6Address
+
+    def __init__(
+        self, name: str,
+        rtype: RecordType,
+        rclass: RecordClass,
+        ttl: int,
+        length: int,
+        address: IPv6Address
+    ) -> None:
+        super().__init__(name, rtype, rclass, ttl, length)
+        self.address = address
+
+    def __repr__(self) -> str:
+        rep_dict = {
+            "name": self.name,
+            "type": self.rtype.name,
+            "class": self.rec_class.name,
+            "ttl": self.ttl,
+            "length": self.length,
+            "address": self.address
+        }
+        return str(rep_dict)
+
+
 # Record Type CNAME, representing Canonical name of a host
 class CNAME(Record):
     cname: str
@@ -113,6 +140,7 @@ class CNAME(Record):
         return str(rep_dict)
 
 
+# Record Type MX, representing the host of the mail server for a domain
 class MX(Record):
     # Lower pref value => High Priority
     preference: int  # 2 bytes : Specifies the preference given to this record among others
@@ -140,5 +168,32 @@ class MX(Record):
             "length": self.length,
             "preference": self.preference,
             "exchange": self.exchange
+        }
+        return str(rep_dict)
+
+
+# Record Type NS, Representing the DNS server address for a domain
+class NS(Record):
+    nsdname: str  # Domain name which specifies a host which should be authoritative for specified class and domain
+
+    def __init__(
+        self, name: str,
+        rtype: RecordType,
+        rclass: RecordClass,
+        ttl: int,
+        length: int,
+        nsdname: str
+    ) -> None:
+        super().__init__(name, rtype, rclass, ttl, length)
+        self.nsdname = nsdname
+
+    def __repr__(self) -> str:
+        rep_dict = {
+            "name": self.name,
+            "type": self.rtype.name,
+            "class": self.rec_class.name,
+            "ttl": self.ttl,
+            "length": self.length,
+            "nsdname": self.nsdname
         }
         return str(rep_dict)
