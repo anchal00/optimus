@@ -1,6 +1,38 @@
+from enum import Enum
 from typing import List
 
 from dns_records import Record, RecordClass, RecordType
+
+
+class ResponseCode(Enum):  # 4 bits
+    NOERROR = 0
+
+    # The name server was unable to interpret the query
+    FORMATERROR = 1
+
+    # The name server was unable to process this query due to a problem with the name server.
+    SRVRFAILURE = 2
+
+    # Meaningful only for responses from an authoritative N server.
+    # This code signifies that the domain name referenced in the query does not exist.
+    NAMEERROR = 3
+
+    # The name server does not support the requested kind of query.
+    NOTIMPLEMENTED = 4
+
+    # The name server refuses to perform the specified operation for
+    # policy reasons.  For example, a name server may not wish to provide the
+    # information to the particular requester, or a name server may not wish to perform
+    # a particular operation (e.g., zone transfer) for particular data.
+    REFUSED = 5
+
+    UNKNOWN = -1
+
+    def from_value(value: int):
+        for rec in ResponseCode:
+            if rec.value == value:
+                return rec
+        return ResponseCode.UNKNOWN
 
 
 class Question:
@@ -76,8 +108,7 @@ class DNSHeader:
             "is_recursion_desired": self.is_recursion_desired,
             "is_recursion_available": self.is_recursion_available,
             "z_flag": self.z_flag,
-            # TODO: create Response Enum
-            "rcode": self.response_code,
+            "rcode": self.response_code.name,
             "question_count": self.question_count,
             "answer_count": self.answer_count,
             "nameserver_records_count": self.nameserver_records_count,
