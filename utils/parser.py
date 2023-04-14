@@ -16,6 +16,13 @@ class Parser:
     def __seek_ptr_pos(self, pos: int) -> None:
         self.__ptr = pos
 
+    def __parse_bytes(self, bytes_to_parse: int) -> int:
+        to_be_read_data_block = self.__bin_data_block[self.__ptr:]
+        data = 0
+        for x in to_be_read_data_block[:bytes_to_parse]:
+            data = data << 8 | x
+        return data
+
     def __parse_bytes_and_move_ahead(self, bytes_to_parse: int) -> int:
         to_be_read_data_block = self.__bin_data_block[self.__ptr:]
         data = 0
@@ -25,21 +32,29 @@ class Parser:
         return data
 
     def __parse_record_name(self) -> str:
-        msb_data: int = self.__parse_bytes_and_move_ahead(1)
-        if msb_data ^ 0xC0 == 0:
-            # If the First Byte (MSB) has two leftmost(MS) bits set then
-            # the name is represented in Compressed format.
-            # So in this case, the next byte should be treated as OFFSET
+        msb_data: int = self.__parse_bytes(1)
+        if self.__is_label_compressed(msb_data):
+            # In this case, the next byte should be treated as OFFSET
             # which specifies the position from where the name has to be
             # read
-            offset: int = self.__parse_bytes_and_move_ahead(1)
-            cur_ptr_pos: int = self.__ptr
-            self.__seek_ptr_pos(offset)
-            name: str = self.__parse_sequence_of_labels()
-            # Restore pointer to where it was
-            self.__seek_ptr_pos(cur_ptr_pos)
+            self.__increment_ptr(1)
+            name = self.__parse_compressed_label()
             return name
         return self.__parse_sequence_of_labels()
+
+    def __is_label_compressed(self, label_length):
+        # If the First Byte (MSB) of the 'length' byte has two leftmost(MS)
+        #  bits set then the label is represented in Compressed format.
+        return label_length ^ 0xC0 == 0
+
+    def __parse_compressed_label(self):
+        offset: int = self.__parse_bytes_and_move_ahead(1)
+        cur_ptr_pos: int = self.__ptr
+        self.__seek_ptr_pos(offset)
+        name: str = self.__parse_sequence_of_labels()
+        # Restore pointer to where it was
+        self.__seek_ptr_pos(cur_ptr_pos)
+        return name
 
     def __parse_sequence_of_labels(self) -> str:
         full_name: List = []
@@ -50,6 +65,10 @@ class Parser:
         label_length: int = self.__parse_bytes_and_move_ahead(1)
         # Parse sequence of labels to decode the Name
         while label_length != 0:
+            if self.__is_label_compressed(label_length):
+                name_str = self.__parse_compressed_label()
+                full_name.append(name_str)
+                return '.'.join(full_name)
             for _ in range(0, label_length):
                 label: int = self.__parse_bytes_and_move_ahead(1)
                 name_str = name_str + chr(label)
@@ -105,7 +124,7 @@ class Parser:
         questions: List[Question] = []
         for _ in range(0, total_questions):
             # Parse name
-            name: str = self.__parse_sequence_of_labels()
+            name: str = self.__parse_record_name()
             # Parse type
             rtype: RecordType = RecordType.from_value(self.__parse_bytes_and_move_ahead(2))
             # Parse class
@@ -124,6 +143,9 @@ class Parser:
         if rtype == RecordType.A:
             ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(4)
             record: Record = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
+        elif rtype == RecordType.CNAME:
+            from dns_records import CNAME
+            record: Record = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
         return record
 
     def __get_ans_section(self, total_answers: int) -> List[Record]:
@@ -155,6 +177,7 @@ class Parser:
                 additional_records = self.__get_additional_section()
         return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
 
+    # TODO: Fix method to accept only one arg of type DNSPacket rather than passing separate args
     @staticmethod
     def create_query_dns_packet(domain: str, recursion_desired: bool) -> bytearray:
         dns_packet_bin: bytearray = bytearray(50)  # Use arbitrary packet size(50) for now
@@ -173,7 +196,7 @@ class Parser:
         cur_pos = 12
         for label in labels:
             # Write label's length
-            dns_packet_bin[cur_pos] = len(label)
+            dns_packet_bin[cur_pos] = len(label)  # TODO: Add check to ensure that label length is <=63
             cur_pos += 1
             for ch in label:
                 data = ord(ch) if ch != '.' else 0

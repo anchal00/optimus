@@ -8,9 +8,9 @@ sock.bind(("0.0.0.0", 5000))
 sock.connect(("8.8.8.8", 53))
 
 # Create a Query Packet
-packet = Parser.create_query_dns_packet(domain='google.com', recursion_desired=False)
+packet = Parser.create_query_dns_packet(domain='www.yahoo.com', recursion_desired=True)
 # Send the Query Packet
 sock.send(packet)
 # Receive response
-print(Parser(sock.recv(600)).get_dns_packet()) # Read 600 bytes only for now
+print(Parser(sock.recv(600)).get_dns_packet())  # Read 600 bytes only for now
 sock.close()
