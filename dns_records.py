@@ -111,3 +111,34 @@ class CNAME(Record):
             "cname": self.cname
         }
         return str(rep_dict)
+
+
+class MX(Record):
+    # Lower pref value => High Priority
+    preference: int  # 2 bytes : Specifies the preference given to this record among others
+    exchange: str  # Domain name which specifies a host willing to act as a mail exchange
+
+    def __init__(
+        self, name: str,
+        rtype: RecordType,
+        rclass: RecordClass,
+        ttl: int,
+        length: int,
+        preference: int,
+        exchange: str
+    ) -> None:
+        super().__init__(name, rtype, rclass, ttl, length)
+        self.preference = preference
+        self.exchange = exchange
+
+    def __repr__(self) -> str:
+        rep_dict = {
+            "name": self.name,
+            "type": self.rtype.name,
+            "class": self.rec_class.name,
+            "ttl": self.ttl,
+            "length": self.length,
+            "preference": self.preference,
+            "exchange": self.exchange
+        }
+        return str(rep_dict)

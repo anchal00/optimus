@@ -1,5 +1,6 @@
 import socket
 
+from dns_records import RecordType
 from utils.parser import Parser
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -8,7 +9,7 @@ sock.bind(("0.0.0.0", 5000))
 sock.connect(("8.8.8.8", 53))
 
 # Create a Query Packet
-packet = Parser.create_query_dns_packet(domain='www.yahoo.com', recursion_desired=True)
+packet = Parser.get_bin_query_dns_packet(domain='yahoo.com', record_type=RecordType.MX, recursion_desired=True)
 # Send the Query Packet
 sock.send(packet)
 # Receive response

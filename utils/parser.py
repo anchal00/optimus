@@ -2,7 +2,7 @@ from ipaddress import IPv4Address
 from typing import List
 
 from dns_packet import DNSHeader, DNSPacket, Question
-from dns_records import A, Record, RecordClass, RecordType
+from dns_records import MX, A, Record, RecordClass, RecordType
 
 
 class Parser:
@@ -146,6 +146,9 @@ class Parser:
         elif rtype == RecordType.CNAME:
             from dns_records import CNAME
             record: Record = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
+        elif rtype == RecordType.MX:
+            record: Record = MX(name, rtype, rclass, ttl, length, self.__parse_bytes_and_move_ahead(2),
+                                self.__parse_record_name())
         return record
 
     def __get_ans_section(self, total_answers: int) -> List[Record]:
@@ -154,10 +157,10 @@ class Parser:
             answers.append(self.__read_ans())
         return answers
 
-    def __get_additional_section(self) -> List[Record]:
+    def __get_additional_section(self, additional_records_count: int) -> List[Record]:
         ...
 
-    def __get_authoritative_section(self) -> List[Record]:
+    def __get_authoritative_section(self, nameserver_records_count: int) -> List[Record]:
         ...
 
     def get_dns_packet(self):
@@ -174,12 +177,12 @@ class Parser:
             if dns_header.nameserver_records_count > 0:
                 nameserver_records = self.__get_authoritative_section(dns_header.nameserver_records_count)
             if dns_header.additional_records_count > 0:
-                additional_records = self.__get_additional_section()
+                additional_records = self.__get_additional_section(dns_header.additional_records_count)
         return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
 
     # TODO: Fix method to accept only one arg of type DNSPacket rather than passing separate args
     @staticmethod
-    def create_query_dns_packet(domain: str, recursion_desired: bool) -> bytearray:
+    def get_bin_query_dns_packet(domain: str, record_type: RecordType, recursion_desired: bool) -> bytearray:
         dns_packet_bin: bytearray = bytearray(50)  # Use arbitrary packet size(50) for now
         # Write 12 bytes DNS header
         id: int = 15196  # TODO: Make it random 2 byte ID
@@ -203,8 +206,10 @@ class Parser:
                 dns_packet_bin[cur_pos] = data
                 cur_pos += 1
         # Set Type and Class to 1 for now
-        cur_pos += 2
-        dns_packet_bin[cur_pos] = 1
+        cur_pos += 1
+        dns_packet_bin[cur_pos] = (record_type.value & 0xFF00) >> 8
+        cur_pos += 1
+        dns_packet_bin[cur_pos] = (record_type.value & 0xFF)
         cur_pos += 2
         dns_packet_bin[cur_pos] = 1
         return dns_packet_bin
