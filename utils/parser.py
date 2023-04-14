@@ -98,7 +98,7 @@ class Parser:
         # Parse Z
         z_flag = (lsb_byte >> 4) & 7
         # Parse RC
-        response_code = ResponseCode.from_value((lsb_byte >> 3) & 0x0F)
+        response_code = ResponseCode.from_value(lsb_byte & 0x0F)
         # Parse Record counts
         question_count = self.__parse_bytes_and_move_ahead(2)
         answer_count = self.__parse_bytes_and_move_ahead(2)
