@@ -138,22 +138,22 @@ class Parser:
         rclass: RecordClass = RecordClass.from_value(self.__parse_bytes_and_move_ahead(2))
         ttl: int = self.__parse_bytes_and_move_ahead(4)
         length: int = self.__parse_bytes_and_move_ahead(2)
-        record: Record = None
+        record = None
         # Parse record acc to RecordType
-        if rtype == RecordType.A:
+        if rtype.value == RecordType.A.value:
             ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(4)
-            record: Record = AAAA(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
-        if rtype == RecordType.AAAA:
+            record: A = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
+        elif rtype.value == RecordType.AAAA.value:
             ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(6)
-            record: Record = A(name, rtype, rclass, ttl, length, IPv6Address(ipv4_addr_int))
-        elif rtype == RecordType.CNAME:
+            record: AAAA = AAAA(name, rtype, rclass, ttl, length, IPv6Address(ipv4_addr_int))
+        elif rtype.value == RecordType.CNAME.value:
             from dns_records import CNAME
-            record: Record = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
-        elif rtype == RecordType.MX:
-            record: Record = MX(name, rtype, rclass, ttl, length, self.__parse_bytes_and_move_ahead(2),
-                                self.__parse_record_name())
-        elif rtype == RecordType.NS:
-            record: Record = NS(name, rtype, rclass, ttl, length, self.__parse_record_name())
+            record: CNAME = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
+        elif rtype.value == RecordType.MX.value:
+            record: MX = MX(name, rtype, rclass, ttl, length, self.__parse_bytes_and_move_ahead(2),
+                            self.__parse_record_name())
+        elif rtype.value == RecordType.NS.value:
+            record: NS = NS(name, rtype, rclass, ttl, length, self.__parse_record_name())
         else:
             record: Record = Record(name, rtype, rclass, ttl, length)
         return record
@@ -176,7 +176,7 @@ class Parser:
             ns_records.append(self.__read_response_records())
         return ns_records
 
-    def get_dns_packet(self):
+    def get_dns_packet(self) -> DNSPacket:
         if self.__bin_data_block is None:
             raise Exception("Data not found")
         dns_header: DNSHeader = self.__get_dns_header()
@@ -193,7 +193,7 @@ class Parser:
                 additional_records = self.__get_additional_section(dns_header.additional_records_count)
         return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
 
-    # TODO: Fix method to accept only one arg of type DNSPacket rather than passing separate args
+    # TODO: Avoid usage of this method. Directly use DNSPacket.to_bin() method to generate Query packets
     @staticmethod
     def get_bin_query_dns_packet(domain: str, record_type: RecordType, recursion_desired: bool) -> bytearray:
         dns_packet_bin: bytearray = bytearray(50)  # Use arbitrary packet size(50) for now
