@@ -247,8 +247,6 @@ class MX(Record):
                 data = ord(ch) if ch != '.' else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
-        with open("mx.bin", "wb") as f:
-            f.write(dns_record_bin)
         return dns_record_bin
 
     def __repr__(self) -> str:
