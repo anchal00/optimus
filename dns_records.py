@@ -245,7 +245,7 @@ class MX(Record):
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
         cur_len = len(dns_record_bin)
-        dns_record_bin.append((self.preference & 0xFF00) >> 8) 
+        dns_record_bin.append((self.preference & 0xFF00) >> 8)
         dns_record_bin.append(self.preference & 0xFF)
         labels = self.exchange.split('.')
         for label in labels:
@@ -321,23 +321,36 @@ class NS(Record):
 
 
 class SOA(Record):
-    mname: str  # Domain name of the name server that was the
-                # original or primary source of data for this zone.
-    rname: str  # Domain name which specifies the mailbox of the
-                # person responsible for this zone
-    serial: int  # The unsigned 32 bit version number of the original copy
-                 # of the zone.  Zone transfers preserve this value.  This
-                 # value wraps and should be compared using sequence space
-                 # arithmetic
-    refresh: int  # A 32 bit time interval before the zone should be
-                  # refreshed
-    retry: int  # A 32 bit time interval that should elapse before a
-                # failed refresh should be retried
-    expire: int  # A 32 bit time value that specifies the upper limit on
-                 # the time interval that can elapse before the zone is no
-                 # longer authoritative
-    minimum: int  # The unsigned 32 bit minimum TTL field that should be
-                  # exported with any RR from this zone
+    # Domain name of the name server that was the
+    # original or primary source of data for this zone.
+    mname: str
+
+    # Domain name which specifies the mailbox of the
+    # person responsible for this zone
+    rname: str
+
+    # The unsigned 32 bit version number of the original copy
+    # of the zone.  Zone transfers preserve this value.  This
+    # value wraps and should be compared using sequence space
+    # arithmetic
+    serial: int
+
+    # A 32 bit time interval before the zone should be
+    # refreshed
+    refresh: int
+
+    # A 32 bit time interval that should elapse before a
+    # failed refresh should be retried
+    retry: int
+
+    # A 32 bit time value that specifies the upper limit on
+    # the time interval that can elapse before the zone is no
+    # longer authoritative
+    expire: int
+
+    # The unsigned 32 bit minimum TTL field that should be
+    # exported with any RR from this zone
+    minimum: int
 
     def __init__(
         self, name: str,
