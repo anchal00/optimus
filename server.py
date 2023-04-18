@@ -1,6 +1,6 @@
 import socket
 
-from dns_packet import DNSPacket
+from dns_packet import DNSPacket, ResponseCode
 from dns_parser import Parser
 
 
@@ -28,22 +28,20 @@ if __name__ == "__main__":
     while True:
         received_bytes, address = sock.recvfrom(600)
         received_dns_packet: DNSPacket = Parser(bytearray(received_bytes)).get_dns_packet()
-
-        # Prepare response DNS packet
+        # Prepare response DNS packet to be returned
         response_dns_packet: DNSPacket = DNSPacket()
         response_dns_packet.header.ID = received_dns_packet.header.ID
         response_dns_packet.header.is_recursion_desired = True
-
         packet = perform_dns_lookup(received_dns_packet)
 
+        if packet.header.response_code != ResponseCode.NOERROR.value:
+            response_dns_packet.header.response_code = packet.header.response_code
         response_dns_packet.header.question_count = packet.header.question_count
         response_dns_packet.header.is_recursion_available = packet.header.is_recursion_available
         response_dns_packet.header.answer_count = packet.header.answer_count
         response_dns_packet.header.nameserver_records_count = packet.header.nameserver_records_count
         response_dns_packet.header.additional_records_count = packet.header.additional_records_count
 
-        # TODO: Fix bug in Record -> bytearray conversion code which causes wrong Record lengths to be
-        # recorded in binary format
         response_dns_packet.questions.extend(packet.questions)
         response_dns_packet.answers.extend(packet.answers)
         response_dns_packet.nameserver_records.extend(packet.nameserver_records)

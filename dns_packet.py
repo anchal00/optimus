@@ -188,7 +188,6 @@ class DNSPacket:
         if self.answers:
             for answer in self.answers:
                 dns_packet_bin.extend(answer.to_bin())
-                dns_packet_bin.append(0)
         if self.nameserver_records:
             for ns_record in self.nameserver_records:
                 dns_packet_bin.extend(ns_record.to_bin())

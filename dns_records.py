@@ -194,6 +194,7 @@ class CNAME(Record):
 
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
+        cur_len = len(dns_record_bin)
         labels = self.cname.split('.')
         for label in labels:
             # Write label's length
@@ -202,6 +203,8 @@ class CNAME(Record):
                 data = ord(ch) if ch != '.' else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
+        new_len = len(dns_record_bin)
+        self.length = new_len - cur_len
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -237,7 +240,8 @@ class MX(Record):
 
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
-        dns_record_bin.append((self.preference & 0xFF00) >> 8)
+        cur_len = len(dns_record_bin) # 15
+        dns_record_bin.append((self.preference & 0xFF00) >> 8) 
         dns_record_bin.append(self.preference & 0xFF)
         labels = self.exchange.split('.')
         for label in labels:
@@ -247,6 +251,8 @@ class MX(Record):
                 data = ord(ch) if ch != '.' else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
+        new_len = len(dns_record_bin)
+        self.length = new_len - cur_len
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -279,6 +285,7 @@ class NS(Record):
 
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
+        cur_len = len(dns_record_bin)
         labels = self.name.split('.')
         for label in labels:
             # Write label's length
@@ -287,6 +294,8 @@ class NS(Record):
                 data = ord(ch) if ch != '.' else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
+        new_len = len(dns_record_bin)
+        self.length = new_len - cur_len
         return dns_record_bin
 
     def __repr__(self) -> str:
