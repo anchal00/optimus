@@ -2,7 +2,7 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import List
 
 from dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from dns_records import AAAA, MX, NS, A, Record, RecordClass, RecordType
+from dns_records import AAAA, MX, NS, A, SOA, Record, RecordClass, RecordType
 
 
 class Parser:
@@ -154,6 +154,11 @@ class Parser:
                             self.__parse_record_name())
         elif rtype.value == RecordType.NS.value:
             record: NS = NS(name, rtype, rclass, ttl, length, self.__parse_record_name())
+        elif rtype.value == RecordType.SOA.value:
+            record: SOA = SOA(name, rtype, rclass, ttl, length, self.__parse_record_name(),
+                              self.__parse_record_name(), self.__parse_bytes_and_move_ahead(4),
+                              self.__parse_bytes_and_move_ahead(4), self.__parse_bytes_and_move_ahead(4),
+                              self.__parse_bytes_and_move_ahead(4), self.__parse_bytes_and_move_ahead(4))
         else:
             record: Record = Record(name, rtype, rclass, ttl, length)
         return record
