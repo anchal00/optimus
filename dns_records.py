@@ -205,6 +205,9 @@ class CNAME(Record):
         dns_record_bin.append(0)
         new_len = len(dns_record_bin)
         self.length = new_len - cur_len
+        # Modify length to reflect the actual bytes present in the record
+        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
+        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -240,7 +243,7 @@ class MX(Record):
 
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
-        cur_len = len(dns_record_bin) # 15
+        cur_len = len(dns_record_bin)
         dns_record_bin.append((self.preference & 0xFF00) >> 8) 
         dns_record_bin.append(self.preference & 0xFF)
         labels = self.exchange.split('.')
@@ -253,6 +256,9 @@ class MX(Record):
         dns_record_bin.append(0)
         new_len = len(dns_record_bin)
         self.length = new_len - cur_len
+        # Modify length to reflect the actual bytes present in the record
+        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
+        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -296,6 +302,9 @@ class NS(Record):
         dns_record_bin.append(0)
         new_len = len(dns_record_bin)
         self.length = new_len - cur_len
+        # Modify length to reflect the actual bytes present in the record
+        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
+        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
         return dns_record_bin
 
     def __repr__(self) -> str:
