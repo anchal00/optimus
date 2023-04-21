@@ -42,12 +42,12 @@ class Parser:
             return name
         return self.__parse_sequence_of_labels()
 
-    def __is_label_compressed(self, label_length):
+    def __is_label_compressed(self, label_length) -> bool:
         # If the First Byte (MSB) of the 'length' byte has two leftmost(MS)
         #  bits set then the label is represented in Compressed format.
         return label_length ^ 0xC0 == 0
 
-    def __parse_compressed_label(self):
+    def __parse_compressed_label(self) -> str:
         offset: int = self.__parse_bytes_and_move_ahead(1)
         cur_ptr_pos: int = self.__ptr
         self.__seek_ptr_pos(offset)
@@ -197,38 +197,3 @@ class Parser:
             if dns_header.additional_records_count > 0:
                 additional_records = self.__get_additional_section(dns_header.additional_records_count)
         return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
-
-    # TODO: Avoid usage of this method. Directly use DNSPacket.to_bin() method to generate Query packets
-    @staticmethod
-    def get_bin_query_dns_packet(domain: str, record_type: RecordType, recursion_desired: bool) -> bytearray:
-        dns_packet_bin: bytearray = bytearray(50)  # Use arbitrary packet size(50) for now
-        # Write 12 bytes DNS header
-        id: int = 15196  # TODO: Make it random 2 byte ID
-        # Represent Id in 2 byte format
-        id_msbyte: int = (id & 0xFF00) >> 8
-        id_lsbyte: int = (id & 0xFF)
-        dns_packet_bin[0] = id_msbyte
-        dns_packet_bin[1] = id_lsbyte
-        dns_packet_bin[2] = 1 if recursion_desired else 0
-        dns_packet_bin[3] = 0 ^ (1 << 5)
-        dns_packet_bin[5] = 1  # Set Question Count to 1
-        # Write Question in the DNS packet
-        labels = domain.split('.')
-        cur_pos = 12
-        for label in labels:
-            # Write label's length
-            dns_packet_bin[cur_pos] = len(label)  # TODO: Add check to ensure that label length is <=63
-            cur_pos += 1
-            for ch in label:
-                data = ord(ch) if ch != '.' else 0
-                dns_packet_bin[cur_pos] = data
-                cur_pos += 1
-        # Set Type (In 2 byte format)
-        cur_pos += 1
-        dns_packet_bin[cur_pos] = (record_type.value & 0xFF00) >> 8
-        cur_pos += 1
-        dns_packet_bin[cur_pos] = (record_type.value & 0xFF)
-        # Set Class to 1 for now
-        cur_pos += 2
-        dns_packet_bin[cur_pos] = 1
-        return dns_packet_bin

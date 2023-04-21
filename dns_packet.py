@@ -172,7 +172,7 @@ class DNSPacket:
         nameserver_records: List[Record] = None,
         additional_records: List[Record] = None
     ) -> None:
-        self.header = dns_header if dns_header else DNSHeader()
+        self.header = dns_header
         self.questions = questions if questions else []
         self.answers = answers if answers else []
         self.nameserver_records = nameserver_records if nameserver_records else []
