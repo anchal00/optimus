@@ -293,7 +293,7 @@ class NS(Record):
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
         cur_len = len(dns_record_bin)
-        labels = self.name.split('.')
+        labels = self.nsdname.split('.')
         for label in labels:
             # Write label's length
             dns_record_bin.append(len(label))
