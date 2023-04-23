@@ -144,8 +144,8 @@ class Parser:
             ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(4)
             record: A = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
         elif rtype.value == RecordType.AAAA.value:
-            ipv4_addr_int: int = self.__parse_bytes_and_move_ahead(6)
-            record: AAAA = AAAA(name, rtype, rclass, ttl, length, IPv6Address(ipv4_addr_int))
+            ipv6_addr_int: int = self.__parse_bytes_and_move_ahead(16)
+            record: AAAA = AAAA(name, rtype, rclass, ttl, length, IPv6Address(ipv6_addr_int))
         elif rtype.value == RecordType.CNAME.value:
             from dns_records import CNAME
             record: CNAME = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())

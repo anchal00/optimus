@@ -139,31 +139,35 @@ class AAAA(Record):
 
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
+        cur_len = len(dns_record_bin)
         data = int(self.address)
-        first_2_bytes = (data & 0xFFFF0000000000000000000000000000) >> 112
+        first_2_bytes = (data >> 112) & 0xFFFF
         dns_record_bin.append((first_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((first_2_bytes & 0xFF))
-        second_2_bytes = (data & 0xFFFF000000000000000000000000) >> 96
+        second_2_bytes = (data >> 96) & 0xFFFF
         dns_record_bin.append((second_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((second_2_bytes & 0xFF))
-        third_2_bytes = (data & 0xFFFF00000000000000000000) >> 80
+        third_2_bytes = (data >> 80) & 0xFFFF
         dns_record_bin.append((third_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((third_2_bytes & 0xFF))
-        fourth_2_bytes = (data & 0xFFFF0000000000000000) >> 64
+        fourth_2_bytes = (data >> 64) & 0xFFFF
         dns_record_bin.append((fourth_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((fourth_2_bytes & 0xFF))
-        fifth_2_bytes = (data & 0xFFFF000000000000) >> 48
+        fifth_2_bytes = (data >> 48) & 0xFFFF
         dns_record_bin.append((fifth_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((fifth_2_bytes & 0xFF))
-        sixth_2_bytes = (data & 0xFFFF00000000) >> 32
+        sixth_2_bytes = (data >> 32) & 0xFFFF
         dns_record_bin.append((sixth_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((sixth_2_bytes & 0xFF))
-        seventh_2_bytes = (data & 0xFFFF0000) >> 16
+        seventh_2_bytes = (data >> 16) & 0xFFFF
         dns_record_bin.append((seventh_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((seventh_2_bytes & 0xFF))
         eighth_2_bytes = (data & 0xFFFF)
         dns_record_bin.append((eighth_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((eighth_2_bytes & 0xFF))
+        # Modify length to reflect the actual bytes present in the record
+        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
+        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
         return dns_record_bin
 
     def __repr__(self) -> str:
