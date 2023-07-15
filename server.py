@@ -28,14 +28,16 @@ def perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             return response_packet
         # Try to find a NS with a corresponding A record in the additional section
         # If found, switch NS and retry the loop i.e perform the lookup on new NS again
-        ns_record: NS = response_packet.nameserver_records[0]
+        ns_record_set: set = {ns_rec.nsdname for ns_rec in response_packet.nameserver_records}
         additional_records: List[Record] = response_packet.additional_records
         if response_packet.additional_records:
             for ad_rec in additional_records:
-                if ad_rec.name == ns_record.nsdname and ad_rec.rtype.value == RecordType.A.value:
+                if ad_rec.name in ns_record_set and ad_rec.rtype.value == RecordType.A.value:
                     server_addr = str(ad_rec.address)
                     break
         else:
+            # Pick a random NS record and perform lookup for that
+            ns_record: NS = random.choice(response_packet.nameserver_records)
             packet: DNSPacket = perform_recursive_lookup(
                 DNSPacket(
                     dns_header=DNSHeader(id=random.randint(0, math.pow(2, 16)-1), is_query=True, question_count=1),
