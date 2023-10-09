@@ -8,12 +8,26 @@ from dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
 from dns_parser import Parser
 from dns_records import NS, A, Record, RecordClass, RecordType
 
-D_ROOT_SERVERS_NET_IP = "199.7.91.13"
+ROOT_SERVERS = [
+    "198.41.0.4",  # a.root-servers.net_ip
+    "199.9.14.201",  # b.root-servers.net_ip
+    "192.33.4.12",  # c.root-servers.net_ip
+    "199.7.91.13",  # d.root-servers.net_ip
+    "192.203.230.10",  # e.root-servers.net_ip
+    "192.5.5.241",  # f.root-servers.net_ip
+    "192.112.36.4",  # g.root-servers.net_ip
+    "198.97.190.53",  # h.root-servers.net_ip
+    "192.36.148.17",  # i.root-servers.net_ip
+    "192.58.128.30",  # j.root-servers.net_ip
+    "193.0.14.129",  # k.root-servers.net_ip
+    "199.7.83.42",  # l.root-servers.net_ip
+    "202.12.27.33",  # m.root-servers.net_ip
+]
 
 
 def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
-    # Start with first lookup on root server D.ROOT-SERVERS.NET
-    server_addr = D_ROOT_SERVERS_NET_IP
+    # Start with first lookup on a random root server
+    server_addr = random.choice(ROOT_SERVERS)
     while True:
         response_packet = __perform_dns_lookup(qpacket, server_addr)
         response_code: ResponseCode = response_packet.header.response_code
@@ -67,7 +81,7 @@ def __handle_request(received_bytes: bytes, return_address: tuple[str, int]) -> 
     if query_packet.header.is_recursion_desired:
         response_packet: DNSPacket = __perform_recursive_lookup(query_packet)
     else:
-        response_packet: DNSPacket = __perform_dns_lookup(query_packet, D_ROOT_SERVERS_NET_IP)
+        response_packet: DNSPacket = __perform_dns_lookup(query_packet, random.choice(ROOT_SERVERS))
     response_packet.header.is_recursion_available = True
     sock.sendto(response_packet.to_bin(), return_address)
     print(f"Query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype} successfully processed")
@@ -75,9 +89,9 @@ def __handle_request(received_bytes: bytes, return_address: tuple[str, int]) -> 
 
 if __name__ == "__main__":
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(("0.0.0.0", 5000))
-    print("Listening on PORT 5000")
-    with futures.ThreadPoolExecutor(max_workers=8) as pool:
+    sock.bind(("0.0.0.0", 53))
+    print("Listening on PORT 53")
+    with futures.ThreadPoolExecutor(max_workers=90) as pool:
         while True:
             received_bytes, address = sock.recvfrom(600)
-            pool.submit(__handle_request, received_bytes, address)
+            future: futures.Future = pool.submit(__handle_request, received_bytes, address)
