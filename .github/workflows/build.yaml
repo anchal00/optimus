@@ -13,6 +13,5 @@ jobs:
       - name: Checking imports
         uses: isort/isort-action@master
       - name: Checking File Formatting
-        run: |
-          flake8 .
+        uses: suo/flake8-github-action@releases/v1
       - run: echo "🍏 This job's status is ${{ job.status }}."
