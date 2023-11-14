@@ -1,0 +1,17 @@
+name: Build 🚀
+on: [push]
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
+      - name: Installing requirements
+        run: |
+          pip install -r requirements.txt
+      - name: Checking imports
+        uses: isort/isort-action@master
+      - name: Checking File Formatting
+        uses: suo/flake8-github-action@releases/v1
+      - run: echo "🍏 This job's status is ${{ job.status }}."
