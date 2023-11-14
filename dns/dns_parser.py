@@ -2,7 +2,8 @@ from ipaddress import IPv4Address, IPv6Address
 from typing import List
 
 from dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from dns.dns_records import AAAA, MX, NS, SOA, A, Record, RecordClass, RecordType
+from dns.dns_records import (AAAA, MX, NS, SOA, A, Record, RecordClass,
+                             RecordType)
 
 
 class Parser:
