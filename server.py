@@ -80,7 +80,7 @@ def __perform_dns_lookup(query_packet: DNSPacket, server_addr: str) -> DNSPacket
     return Parser(packet_bytes).get_dns_packet()
 
 
-def __handle_request(received_bytes: bytes, return_address: tuple[str, int]) -> None:
+def __handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
     query_packet: DNSPacket = Parser(bytearray(received_bytes)).get_dns_packet()
     print(f"Received query {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
     if query_packet.header.is_recursion_desired:
@@ -88,15 +88,15 @@ def __handle_request(received_bytes: bytes, return_address: tuple[str, int]) -> 
     else:
         response_packet: DNSPacket = __perform_dns_lookup(query_packet, random.choice(ROOT_SERVERS))
     response_packet.header.is_recursion_available = True
-    sock.sendto(response_packet.to_bin(), return_address)
+    master_socket.sendto(response_packet.to_bin(), return_address)
     print(f"Query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype} successfully processed")
 
 
-if __name__ == "__main__":
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(("0.0.0.0", 53))
-    print("Listening on PORT 53")
-    with futures.ThreadPoolExecutor(max_workers=90) as pool:
+def run_server(port: int, worker_threads: int):
+    master_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    master_socket.bind(("0.0.0.0", port))
+    print(f"Listening on PORT {port}")
+    with futures.ThreadPoolExecutor(max_workers=worker_threads) as pool:
         while True:
-            received_bytes, address = sock.recvfrom(600)
-            future: futures.Future = pool.submit(__handle_request, received_bytes, address)
+            received_bytes, address = master_socket.recvfrom(600)
+            pool.submit(__handle_request, master_socket,received_bytes, address)
