@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List
 
-from dns_records import Record, RecordClass, RecordType
+from dns.dns_records import Record, RecordClass, RecordType
 
 
 class ResponseCode(Enum):  # 4 bits

@@ -4,9 +4,9 @@ import socket
 from concurrent import futures
 from typing import List
 
-from dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from dns_parser import Parser
-from dns_records import NS, A, Record, RecordClass, RecordType
+from dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
+from dns.dns_parser import Parser
+from dns.dns_records import NS, A, Record, RecordClass, RecordType
 
 ROOT_SERVERS = [
     "198.41.0.4",  # a.root-servers.net_ip
