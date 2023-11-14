@@ -11,8 +11,7 @@ jobs:
         run: |
           pip install -r requirements.txt
       - name: Checking imports
-        run: |
-          isort . --check-only
+        uses: isort/isort-action@master
       - name: Checking File Formatting
         run: |
           flake8 .
