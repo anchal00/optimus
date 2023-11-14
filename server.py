@@ -66,12 +66,17 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
 
 
 def __perform_dns_lookup(query_packet: DNSPacket, server_addr: str) -> DNSPacket:
-    dns_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    dns_socket.bind(("0.0.0.0", random.randint(2000, 3000)))
-    dns_socket.connect((server_addr, 53))
-    dns_socket.send(query_packet.to_bin())
-    packet_bytes = dns_socket.recv(600)  # Read 600 bytes only for now
-    dns_socket.close()
+    try:
+        dns_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        dns_socket.settimeout(3)
+        dns_socket.connect((server_addr, 53))
+        dns_socket.send(query_packet.to_bin())
+        packet_bytes = dns_socket.recv(600)  # Read 600 bytes only for now
+    except TimeoutError:
+        print(f"Error: Time out, couldn't complete lookup on {server_addr}")
+    finally:
+        dns_socket.shutdown(socket.SHUT_RDWR)
+        dns_socket.close()
     return Parser(packet_bytes).get_dns_packet()
 
 
