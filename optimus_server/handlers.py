@@ -4,7 +4,7 @@ import socket
 from typing import List
 
 from dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from dns.dns_parser import Parser
+from dns.dns_parser import DNSParser
 from dns.dns_records import NS, A, Record, RecordClass, RecordType
 
 ROOT_SERVERS = [
@@ -76,11 +76,11 @@ def __perform_dns_lookup(query_packet: DNSPacket, server_addr: str) -> DNSPacket
     finally:
         dns_socket.shutdown(socket.SHUT_RDWR)
         dns_socket.close()
-    return Parser(packet_bytes).get_dns_packet()
+    return DNSParser(packet_bytes).get_dns_packet()
 
 
 def handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
-    query_packet: DNSPacket = Parser(bytearray(received_bytes)).get_dns_packet()
+    query_packet: DNSPacket = DNSParser(bytearray(received_bytes)).get_dns_packet()
     print(f"Received query {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
     if query_packet.header.is_recursion_desired:
         response_packet: DNSPacket = __perform_recursive_lookup(query_packet)
