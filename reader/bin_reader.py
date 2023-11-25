@@ -20,7 +20,7 @@ class BinReader:
             data = data << 8 | x
         return data
 
-    def parse_bytes_and_move_ahead(self, bytes_to_parse: int) -> int:
+    def parse_bytes_and_move_ptr_ahead(self, bytes_to_parse: int) -> int:
         to_be_read_data_block = self.__bin_data_block[self.__ptr:]
         data = 0
         for x in to_be_read_data_block[:bytes_to_parse]:

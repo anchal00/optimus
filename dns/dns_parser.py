@@ -44,7 +44,7 @@ class DNSParser:
         return label_length ^ 0xC0 == 0
 
     def __parse_compressed_label(self) -> str:
-        offset: int = self.__bin_reader.parse_bytes_and_move_ahead(1)
+        offset: int = self.__bin_reader.parse_bytes_and_move_ptr_ahead(1)
         cur_ptr_pos: int = self.__bin_reader.get_cur_ptr_pos()
         self.__bin_reader.seek_ptr_pos(offset)
         name: str = self.__parse_sequence_of_labels()
@@ -58,7 +58,7 @@ class DNSParser:
         # 2 MSB bits of the this label_length field are always 0
         # So the label_length can have values between 0 and 63, meaning
         # that the name can take only between 0-63 octets
-        label_length: int = self.__bin_reader.parse_bytes_and_move_ahead(1)
+        label_length: int = self.__bin_reader.parse_bytes_and_move_ptr_ahead(1)
         # Parse sequence of labels to decode the Name
         while label_length != 0:
             if self.__is_label_compressed(label_length):
@@ -66,17 +66,17 @@ class DNSParser:
                 full_name.append(name_str)
                 return '.'.join(full_name)
             for _ in range(0, label_length):
-                label: int = self.__bin_reader.parse_bytes_and_move_ahead(1)
+                label: int = self.__bin_reader.parse_bytes_and_move_ptr_ahead(1)
                 name_str = name_str + chr(label)
             full_name.append(name_str)
             name_str = ''
-            label_length: int = self.__bin_reader.parse_bytes_and_move_ahead(1)
+            label_length: int = self.__bin_reader.parse_bytes_and_move_ptr_ahead(1)
         return '.'.join(full_name)
 
     def __get_dns_header(self) -> DNSHeader:
         # Parse ID
-        id = self.__bin_reader.parse_bytes_and_move_ahead(2)
-        bytes_data = self.__bin_reader.parse_bytes_and_move_ahead(2)
+        id = self.__bin_reader.parse_bytes_and_move_ptr_ahead(2)
+        bytes_data = self.__bin_reader.parse_bytes_and_move_ptr_ahead(2)
         msb_byte = (bytes_data & 0xFF00) >> 8
         lsb_byte = bytes_data & 0xFF
         # Parse QR
@@ -96,10 +96,10 @@ class DNSParser:
         # Parse RC
         response_code = ResponseCode.from_value(lsb_byte & 0x0F)
         # Parse Record counts
-        question_count = self.__bin_reader.parse_bytes_and_move_ahead(2)
-        answer_count = self.__bin_reader.parse_bytes_and_move_ahead(2)
-        nameserver_records_count = self.__bin_reader.parse_bytes_and_move_ahead(2)
-        additional_records_count = self.__bin_reader.parse_bytes_and_move_ahead(2)
+        question_count = self.__bin_reader.parse_bytes_and_move_ptr_ahead(2)
+        answer_count = self.__bin_reader.parse_bytes_and_move_ptr_ahead(2)
+        nameserver_records_count = self.__bin_reader.parse_bytes_and_move_ptr_ahead(2)
+        additional_records_count = self.__bin_reader.parse_bytes_and_move_ptr_ahead(2)
         return DNSHeader(
             id,
             is_query,
@@ -122,39 +122,39 @@ class DNSParser:
             # Parse name
             name: str = self.__parse_record_name()
             # Parse type
-            rtype: RecordType = RecordType.from_value(self.__bin_reader.parse_bytes_and_move_ahead(2))
+            rtype: RecordType = RecordType.from_value(self.__bin_reader.parse_bytes_and_move_ptr_ahead(2))
             # Parse class
-            qclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_and_move_ahead(2))
+            qclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_and_move_ptr_ahead(2))
             questions.append(Question(name, rtype, qclass))
         return questions
 
     def __read_response_records(self) -> Record:
         name: str = self.__parse_record_name()
-        rtype: RecordType = RecordType.from_value(self.__bin_reader.parse_bytes_and_move_ahead(2))
-        rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_and_move_ahead(2))
-        ttl: int = self.__bin_reader.parse_bytes_and_move_ahead(4)
-        length: int = self.__bin_reader.parse_bytes_and_move_ahead(2)
+        rtype: RecordType = RecordType.from_value(self.__bin_reader.parse_bytes_and_move_ptr_ahead(2))
+        rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_and_move_ptr_ahead(2))
+        ttl: int = self.__bin_reader.parse_bytes_and_move_ptr_ahead(4)
+        length: int = self.__bin_reader.parse_bytes_and_move_ptr_ahead(2)
         record = None
         # Parse record acc to RecordType
         if rtype.value == RecordType.A.value:
-            ipv4_addr_int: int = self.__bin_reader.parse_bytes_and_move_ahead(4)
+            ipv4_addr_int: int = self.__bin_reader.parse_bytes_and_move_ptr_ahead(4)
             record: A = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
         elif rtype.value == RecordType.AAAA.value:
-            ipv6_addr_int: int = self.__bin_reader.parse_bytes_and_move_ahead(16)
+            ipv6_addr_int: int = self.__bin_reader.parse_bytes_and_move_ptr_ahead(16)
             record: AAAA = AAAA(name, rtype, rclass, ttl, length, IPv6Address(ipv6_addr_int))
         elif rtype.value == RecordType.CNAME.value:
             from dns.dns_records import CNAME
             record: CNAME = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
         elif rtype.value == RecordType.MX.value:
-            record: MX = MX(name, rtype, rclass, ttl, length, self.__bin_reader.parse_bytes_and_move_ahead(2),
+            record: MX = MX(name, rtype, rclass, ttl, length, self.__bin_reader.parse_bytes_and_move_ptr_ahead(2),
                             self.__parse_record_name())
         elif rtype.value == RecordType.NS.value:
             record: NS = NS(name, rtype, rclass, ttl, length, self.__parse_record_name())
         elif rtype.value == RecordType.SOA.value:
             record: SOA = SOA(name, rtype, rclass, ttl, length, self.__parse_record_name(),
-                              self.__parse_record_name(), self.__bin_reader.parse_bytes_and_move_ahead(4),
-                              self.__bin_reader.parse_bytes_and_move_ahead(4), self.__bin_reader.parse_bytes_and_move_ahead(4),
-                              self.__bin_reader.parse_bytes_and_move_ahead(4), self.__bin_reader.parse_bytes_and_move_ahead(4))
+                              self.__parse_record_name(), self.__bin_reader.parse_bytes_and_move_ptr_ahead(4),
+                              self.__bin_reader.parse_bytes_and_move_ptr_ahead(4), self.__bin_reader.parse_bytes_and_move_ptr_ahead(4),
+                              self.__bin_reader.parse_bytes_and_move_ptr_ahead(4), self.__bin_reader.parse_bytes_and_move_ptr_ahead(4))
         else:
             record: Record = Record(name, rtype, rclass, ttl, length)
         return record
