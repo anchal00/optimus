@@ -153,8 +153,10 @@ class DNSParser:
         elif rtype.value == RecordType.SOA.value:
             record: SOA = SOA(name, rtype, rclass, ttl, length, self.__parse_record_name(),
                               self.__parse_record_name(), self.__bin_reader.parse_bytes_and_move_ptr_ahead(4),
-                              self.__bin_reader.parse_bytes_and_move_ptr_ahead(4), self.__bin_reader.parse_bytes_and_move_ptr_ahead(4),
-                              self.__bin_reader.parse_bytes_and_move_ptr_ahead(4), self.__bin_reader.parse_bytes_and_move_ptr_ahead(4))
+                              self.__bin_reader.parse_bytes_and_move_ptr_ahead(4),
+                              self.__bin_reader.parse_bytes_and_move_ptr_ahead(4),
+                              self.__bin_reader.parse_bytes_and_move_ptr_ahead(4),
+                              self.__bin_reader.parse_bytes_and_move_ptr_ahead(4))
         else:
             record: Record = Record(name, rtype, rclass, ttl, length)
         return record

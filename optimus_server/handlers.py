@@ -76,7 +76,7 @@ def __perform_dns_lookup(query_packet: DNSPacket, server_addr: str) -> DNSPacket
     finally:
         dns_socket.shutdown(socket.SHUT_RDWR)
         dns_socket.close()
-    return DNSParser(packet_bytes).get_dns_packet()
+    return DNSParser(bytearray(packet_bytes)).get_dns_packet()
 
 
 def handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
