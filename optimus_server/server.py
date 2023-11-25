@@ -1,7 +1,7 @@
 import socket
 from concurrent import futures
 
-from optimus_server.handlers import handle_request
+from dns.handlers import handle_request
 
 
 def run_server(port: int, worker_threads: int):

@@ -6,6 +6,7 @@ from typing import List
 from dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
 from dns.dns_parser import DNSParser
 from dns.dns_records import NS, A, Record, RecordClass, RecordType
+from networking.udp import query_server
 
 ROOT_SERVERS = [
     "198.41.0.4",  # a.root-servers.net_ip
@@ -28,7 +29,8 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
     server_addr = random.choice(ROOT_SERVERS)
     while True:
-        response_packet = __perform_dns_lookup(qpacket, server_addr)
+        lookup_response: bytearray = query_server(qpacket.to_bin(), server_addr)
+        response_packet = DNSParser(lookup_response).get_dns_packet()
         response_code: ResponseCode = response_packet.header.response_code
         # If the server responds with NXDOMAIN or if we get the Answer, return the packet as it is
         if response_code.value == ResponseCode.NXDOMAIN.value:
@@ -37,6 +39,8 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             return response_packet
         # No NS record is found, we need to return with response packet we already have
         if not response_packet.nameserver_records:
+            return response_packet
+        if not qpacket.header.is_recursion_desired:
             return response_packet
         # Try to find a 'NS' type record with a corresponding 'A' type record in the additional section
         # If found, switch Nameserver and retry the loop i.e perform the lookup on new NameServer again
@@ -64,28 +68,10 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             server_addr = str(a_type_record.address)
 
 
-def __perform_dns_lookup(query_packet: DNSPacket, server_addr: str) -> DNSPacket:
-    try:
-        dns_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        dns_socket.settimeout(3)
-        dns_socket.connect((server_addr, 53))
-        dns_socket.send(query_packet.to_bin())
-        packet_bytes = dns_socket.recv(600)  # Read 600 bytes only for now
-    except TimeoutError:
-        print(f"Error: Time out, couldn't complete lookup on {server_addr}")
-    finally:
-        dns_socket.shutdown(socket.SHUT_RDWR)
-        dns_socket.close()
-    return DNSParser(bytearray(packet_bytes)).get_dns_packet()
-
-
 def handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
     query_packet: DNSPacket = DNSParser(bytearray(received_bytes)).get_dns_packet()
     print(f"Received query {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
-    if query_packet.header.is_recursion_desired:
-        response_packet: DNSPacket = __perform_recursive_lookup(query_packet)
-    else:
-        response_packet: DNSPacket = __perform_dns_lookup(query_packet, random.choice(ROOT_SERVERS))
+    response_packet: DNSPacket = __perform_recursive_lookup(query_packet)
     response_packet.header.is_recursion_available = True
     master_socket.sendto(response_packet.to_bin(), return_address)
     print(f"Query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype} successfully processed")

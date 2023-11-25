@@ -8,7 +8,8 @@ setup(
     author_email="anchal82199@gmail.com",
     url="https://github.com/anchal00/optimus",
     packages=find_packages(
-        include=["cli", "cli.*", "dns", "dns.*", "optimus_server", "optimus_server.*", "reader", "reader.*"]
+        include=["cli", "cli.*", "dns", "dns.*", "optimus_server", "optimus_server.*", "reader", "reader.*",
+                 "networking", "networking.*"]
     ),
     install_requires=[
         "flake8==6.0.0",
