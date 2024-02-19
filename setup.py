@@ -18,7 +18,7 @@ setup(
     packages=find_packages(
         include=["cli", "cli.*", "dns", "dns.*", "optimus_server", "optimus_server.*",
                  "bin_data_reader", "bin_data_reader.*", "networking", "networking.*",
-                 "version", "version.*"]
+                 "version", "version.*", "logging_utils", "logging_utils.*"]
     ),
     install_requires=[
         "flake8==6.0.0",

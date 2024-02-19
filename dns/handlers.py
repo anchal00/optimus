@@ -6,7 +6,8 @@ from typing import List
 from dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
 from dns.dns_parser import DNSParser
 from dns.dns_records import NS, A, Record, RecordClass, RecordType
-from networking.udp import query_server
+from logging_utils.logger import log
+from networking.udp_utils import query_server_over_udp
 
 ROOT_SERVERS = [
     "198.41.0.4",  # a.root-servers.net_ip
@@ -29,7 +30,11 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
     server_addr = random.choice(ROOT_SERVERS)
     while True:
-        response_packet: DNSPacket = DNSParser(bytearray(query_server(qpacket.to_bin(), server_addr))).get_dns_packet()
+        response_packet: DNSPacket = DNSParser(
+            bytearray(
+                query_server_over_udp(qpacket.to_bin(), server_addr)
+            )
+        ).get_dns_packet()
         response_code: ResponseCode = response_packet.header.response_code
         # If the server responds with error or if we get the Answer, return the packet as it is
         if response_code.value in [
@@ -77,8 +82,8 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
 def handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
     query_packet: DNSPacket = DNSParser(bytearray(received_bytes)).get_dns_packet()
     # TODO: Send query for each question in query_packet
-    print(f"Received query {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
+    log(f"Received query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
     response_packet: DNSPacket = __perform_recursive_lookup(query_packet)
     response_packet.header.is_recursion_available = True
     master_socket.sendto(response_packet.to_bin(), return_address)
-    print(f"Query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype} successfully processed")
+    log(f"Query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype} successfully processed")
