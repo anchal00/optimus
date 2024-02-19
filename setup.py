@@ -1,15 +1,24 @@
+import os
+
 from setuptools import find_packages, setup
+
+here = os.path.abspath(os.path.dirname(__file__))
+
+META = {}
+with open(os.path.join(here, "version", "__version__.py")) as f:
+    exec(f.read(), META)
 
 setup(
     name='optimus',
-    version='1.0.0',
+    version=META.get("VERSION"),
     description="A toy DNS server",
     author="Anchal",
     author_email="anchal82199@gmail.com",
     url="https://github.com/anchal00/optimus",
     packages=find_packages(
-        include=["cli", "cli.*", "dns", "dns.*", "optimus_server", "optimus_server.*", "reader", "reader.*",
-                 "networking", "networking.*"]
+        include=["cli", "cli.*", "dns", "dns.*", "optimus_server", "optimus_server.*",
+                 "bin_data_reader", "bin_data_reader.*", "networking", "networking.*",
+                 "version", "version.*"]
     ),
     install_requires=[
         "flake8==6.0.0",

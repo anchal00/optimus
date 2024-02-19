@@ -1,6 +1,6 @@
 
 class BinReader:
-    def __init__(self, bin_data: bytes) -> None:
+    def __init__(self, bin_data: bytearray) -> None:
         self.__bin_data_block = bin_data
         self.__ptr = 0
 

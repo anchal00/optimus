@@ -29,11 +29,17 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
     server_addr = random.choice(ROOT_SERVERS)
     while True:
-        lookup_response: bytearray = query_server(qpacket.to_bin(), server_addr)
-        response_packet = DNSParser(lookup_response).get_dns_packet()
+        response_packet: DNSPacket = DNSParser(bytearray(query_server(qpacket.to_bin(), server_addr))).get_dns_packet()
         response_code: ResponseCode = response_packet.header.response_code
-        # If the server responds with NXDOMAIN or if we get the Answer, return the packet as it is
-        if response_code.value == ResponseCode.NXDOMAIN.value:
+        # If the server responds with error or if we get the Answer, return the packet as it is
+        if response_code.value in [
+            ResponseCode.NXDOMAIN.value,
+            ResponseCode.FORMERR.value,
+            ResponseCode.SERVFAIL.value,
+            ResponseCode.NOTIMP.value,
+            ResponseCode.REFUSED.value,
+            ResponseCode.UNKNOWN.value,
+        ]:
             return response_packet
         if response_code.value == ResponseCode.NOERROR.value and len(response_packet.answers) > 0:
             return response_packet
@@ -70,6 +76,7 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
 
 def handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
     query_packet: DNSPacket = DNSParser(bytearray(received_bytes)).get_dns_packet()
+    # TODO: Send query for each question in query_packet
     print(f"Received query {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
     response_packet: DNSPacket = __perform_recursive_lookup(query_packet)
     response_packet.header.is_recursion_available = True

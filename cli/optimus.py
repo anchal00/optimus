@@ -7,7 +7,7 @@ from optimus_server.server import run_server
 def main(argv):
     arg_parser = ArgumentParser(
         prog="Optimus",
-        description="A toy DNS server made for fun :)"
+        description="A toy DNS server made for fun ;)"
     )
     arg_parser.add_argument("-r", action="store_true", help="Run DNS server")
     arg_parser.add_argument("-p", metavar="PORT", type=int, default=53,
