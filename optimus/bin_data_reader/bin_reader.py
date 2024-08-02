@@ -1,4 +1,3 @@
-
 class BinReader:
     def __init__(self, bin_data: bytearray) -> None:
         self.__bin_data_block = bin_data
@@ -16,7 +15,9 @@ class BinReader:
 
     def parse_bytes_to_int(self, bytes_to_parse: int) -> int:
         cur_ptr_pos = self.get_cur_ptr_pos()
-        to_be_read_data_block = self.__bin_data_block[cur_ptr_pos: cur_ptr_pos + bytes_to_parse]
+        to_be_read_data_block = self.__bin_data_block[
+            cur_ptr_pos: cur_ptr_pos + bytes_to_parse
+        ]
         data = 0
         for x in to_be_read_data_block:
             data = data << 8 | x

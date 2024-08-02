@@ -1,4 +1,3 @@
-
 import socket
 
 from optimus.logging_config.logger import log_error
@@ -6,8 +5,8 @@ from optimus.logging_config.logger import log_error
 
 def query_server_over_udp(bin_data: bytearray, server_addr: str) -> bytes:
     """
-        Connects to given `server_addr` over UDP on port 53, sends given `bin_data`
-        and returns back the response
+    Connects to given `server_addr` over UDP on port 53, sends given `bin_data`
+    and returns back the response
     """
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

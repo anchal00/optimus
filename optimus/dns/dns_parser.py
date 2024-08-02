@@ -3,8 +3,17 @@ from typing import List
 
 from optimus.bin_data_reader.bin_reader import BinReader
 from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.dns_records import (AAAA, MX, NS, SOA, A, OptPseudoRR, Record, RecordClass,
-                             RecordType)
+from optimus.dns.dns_records import (
+    AAAA,
+    MX,
+    NS,
+    SOA,
+    A,
+    OptPseudoRR,
+    Record,
+    RecordClass,
+    RecordType,
+)
 
 
 class DNSParser:
@@ -22,13 +31,19 @@ class DNSParser:
             if dns_header.answer_count > 0:
                 answers = self.__get_ans_section(dns_header.answer_count)
             if dns_header.nameserver_records_count > 0:
-                nameserver_records = self.__get_authoritative_section(dns_header.nameserver_records_count)
+                nameserver_records = self.__get_authoritative_section(
+                    dns_header.nameserver_records_count
+                )
             if dns_header.additional_records_count > 0:
-                additional_records = self.__get_additional_section(dns_header.additional_records_count)
+                additional_records = self.__get_additional_section(
+                    dns_header.additional_records_count
+                )
         else:
             if dns_header.additional_records_count > 0:
                 dns_header.additional_records_count = 0
-        return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
+        return DNSPacket(
+            dns_header, questions, answers, nameserver_records, additional_records
+        )
 
     def __parse_record_name(self) -> str:
         msb_data: int = self.__bin_reader.parse_bytes_to_int(1)
@@ -57,7 +72,7 @@ class DNSParser:
 
     def __parse_sequence_of_labels(self) -> str:
         full_name: List = []
-        name_str: str = ''
+        name_str: str = ""
         # 2 MSB bits of the this label_length field are always 0
         # So the label_length can have values between 0 and 63, meaning
         # that the name can take only between 0-63 octets
@@ -67,14 +82,14 @@ class DNSParser:
             if self.__is_label_compressed(label_length):
                 name_str = self.__parse_compressed_label()
                 full_name.append(name_str)
-                return '.'.join(full_name)
+                return ".".join(full_name)
             for _ in range(0, label_length):
                 label: int = self.__bin_reader.parse_bytes_to_int_and_move(1)
                 name_str = name_str + chr(label)
             full_name.append(name_str)
-            name_str = ''
+            name_str = ""
             label_length: int = self.__bin_reader.parse_bytes_to_int_and_move(1)
-        return '.'.join(full_name)
+        return ".".join(full_name)
 
     def __get_dns_header(self) -> DNSHeader:
         # Parse ID
@@ -96,7 +111,9 @@ class DNSParser:
         # Parse RA
         is_recursion_available = lsb_byte & (1 << 7) != 0
         # Parse Z
-        z_field = (lsb_byte >> 4) & 7  # TODO: Expand Z field to Z, AD (Authenticated Data), CD (Checking Disabled)
+        z_field = (
+            lsb_byte >> 4
+        ) & 7  # TODO: Expand Z field to Z, AD (Authenticated Data), CD (Checking Disabled)
         # Parse RC
         response_code = ResponseCode.from_value(lsb_byte & 0x0F)
         # Parse Record counts
@@ -117,7 +134,7 @@ class DNSParser:
             question_count,
             answer_count,
             nameserver_records_count,
-            additional_records_count
+            additional_records_count,
         )
 
     def __get_ques_section(self, total_questions) -> List[Question]:
@@ -126,15 +143,21 @@ class DNSParser:
             # Parse name
             name: str = self.__parse_record_name()
             # Parse type
-            rtype: RecordType = RecordType.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+            rtype: RecordType = RecordType.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             # Parse class
-            qclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+            qclass: RecordClass = RecordClass.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             questions.append(Question(name, rtype, qclass))
         return questions
 
     def __read_response_records(self) -> Record:
         name: str = self.__parse_record_name()
-        rtype: RecordType = RecordType.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+        rtype: RecordType = RecordType.from_value(
+            self.__bin_reader.parse_bytes_to_int_and_move(2)
+        )
         # rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
         # ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
         # length: int = self.__bin_reader.parse_bytes_to_int_and_move(2)
@@ -142,44 +165,78 @@ class DNSParser:
         # TODO: FIX this code, avoid using if-elif ladders
         # Parse record acc to RecordType
         if rtype.value == RecordType.A.value:
-            rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+            rclass: RecordClass = RecordClass.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length: int = self.__bin_reader.parse_bytes_to_int_and_move(2)
             ipv4_addr_int: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
             record: A = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
         elif rtype.value == RecordType.AAAA.value:
-            rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+            rclass: RecordClass = RecordClass.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length: int = self.__bin_reader.parse_bytes_to_int_and_move(2)
             ipv6_addr_int: int = self.__bin_reader.parse_bytes_to_int_and_move(16)
-            record: AAAA = AAAA(name, rtype, rclass, ttl, length, IPv6Address(ipv6_addr_int))
+            record: AAAA = AAAA(
+                name, rtype, rclass, ttl, length, IPv6Address(ipv6_addr_int)
+            )
         elif rtype.value == RecordType.CNAME.value:
             from dns.dns_records import CNAME
-            rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+
+            rclass: RecordClass = RecordClass.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length: int = self.__bin_reader.parse_bytes_to_int_and_move(2)
-            record: CNAME = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
+            record: CNAME = CNAME(
+                name, rtype, rclass, ttl, length, self.__parse_record_name()
+            )
         elif rtype.value == RecordType.MX.value:
-            rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+            rclass: RecordClass = RecordClass.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length: int = self.__bin_reader.parse_bytes_to_int_and_move(2)
-            record: MX = MX(name, rtype, rclass, ttl, length, self.__bin_reader.parse_bytes_to_int_and_move(2),
-                            self.__parse_record_name())
+            record: MX = MX(
+                name,
+                rtype,
+                rclass,
+                ttl,
+                length,
+                self.__bin_reader.parse_bytes_to_int_and_move(2),
+                self.__parse_record_name(),
+            )
         elif rtype.value == RecordType.NS.value:
-            rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+            rclass: RecordClass = RecordClass.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length: int = self.__bin_reader.parse_bytes_to_int_and_move(2)
-            record: NS = NS(name, rtype, rclass, ttl, length, self.__parse_record_name())
+            record: NS = NS(
+                name, rtype, rclass, ttl, length, self.__parse_record_name()
+            )
         elif rtype.value == RecordType.SOA.value:
-            rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+            rclass: RecordClass = RecordClass.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length: int = self.__bin_reader.parse_bytes_to_int_and_move(2)
-            record: SOA = SOA(name, rtype, rclass, ttl, length, self.__parse_record_name(),
-                              self.__parse_record_name(), self.__bin_reader.parse_bytes_to_int_and_move(4),
-                              self.__bin_reader.parse_bytes_to_int_and_move(4),
-                              self.__bin_reader.parse_bytes_to_int_and_move(4),
-                              self.__bin_reader.parse_bytes_to_int_and_move(4),
-                              self.__bin_reader.parse_bytes_to_int_and_move(4))
+            record: SOA = SOA(
+                name,
+                rtype,
+                rclass,
+                ttl,
+                length,
+                self.__parse_record_name(),
+                self.__parse_record_name(),
+                self.__bin_reader.parse_bytes_to_int_and_move(4),
+                self.__bin_reader.parse_bytes_to_int_and_move(4),
+                self.__bin_reader.parse_bytes_to_int_and_move(4),
+                self.__bin_reader.parse_bytes_to_int_and_move(4),
+                self.__bin_reader.parse_bytes_to_int_and_move(4),
+            )
         elif rtype.value == RecordType.OPT_RR.value:
             rclass: RecordClass = self.__bin_reader.parse_bytes_to_int_and_move(2)
             ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
@@ -189,10 +246,14 @@ class DNSParser:
             data = self.__bin_reader.read_bytes_and_move(option_len)
             prev = self.__bin_reader.get_cur_ptr_pos()
             self.__bin_reader.seek_ptr_pos(prev - (12 + option_len))
-            record: OptPseudoRR = OptPseudoRR(self.__bin_reader.read_bytes_and_move(12 + option_len))
-            
+            record: OptPseudoRR = OptPseudoRR(
+                self.__bin_reader.read_bytes_and_move(12 + option_len)
+            )
+
         else:
-            rclass: RecordClass = RecordClass.from_value(self.__bin_reader.parse_bytes_to_int_and_move(2))
+            rclass: RecordClass = RecordClass.from_value(
+                self.__bin_reader.parse_bytes_to_int_and_move(2)
+            )
             ttl: int = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length: int = self.__bin_reader.parse_bytes_to_int_and_move(2)
             record: Record = Record(name, rtype, rclass, ttl, length)
@@ -210,7 +271,9 @@ class DNSParser:
             ad_records.append(self.__read_response_records())
         return ad_records
 
-    def __get_authoritative_section(self, nameserver_records_count: int) -> List[Record]:
+    def __get_authoritative_section(
+        self, nameserver_records_count: int
+    ) -> List[Record]:
         ns_records: List[Record] = []
         for _ in range(0, nameserver_records_count):
             ns_records.append(self.__read_response_records())

@@ -9,7 +9,7 @@ with open(os.path.join(here, "optimus", "__version__.py")) as f:
     exec(f.read(), META)
 
 setup(
-    name='optimus',
+    name="optimus",
     version=META.get("VERSION"),
     description="A toy DNS server",
     author="Anchal",
@@ -25,8 +25,8 @@ setup(
     # ],
     python_requires=">=3.9.6",
     entry_points={
-        'console_scripts': [
-            'optimus = optimus.cli.optimus:main_wrapper',
+        "console_scripts": [
+            "optimus = optimus.cli.optimus:main_wrapper",
         ]
-    }
+    },
 )
