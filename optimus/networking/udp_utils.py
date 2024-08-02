@@ -1,7 +1,7 @@
 
 import socket
 
-from logging_utils.logger import log_error
+from optimus.logging_config.logger import log_error
 
 
 def query_server_over_udp(bin_data: bytearray, server_addr: str) -> bytes:

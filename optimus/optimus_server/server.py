@@ -1,8 +1,8 @@
 import socket
 from concurrent import futures
 
-from dns.handlers import handle_request
-from logging_utils.logger import log
+from optimus.dns.handlers import handle_request
+from optimus.logging_config.logger import log
 
 
 def run_server(port: int, worker_threads: int):

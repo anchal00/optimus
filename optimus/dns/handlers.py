@@ -3,12 +3,14 @@ import random
 import socket
 from typing import List
 
-from dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from dns.dns_parser import DNSParser
-from dns.dns_records import NS, A, Record, RecordClass, RecordType
-from logging_utils.logger import log
-from networking.udp_utils import query_server_over_udp
+from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
+from optimus.dns.dns_parser import DNSParser
+from optimus.dns.dns_records import NS, A, Record, RecordClass, RecordType
+from optimus.logging_config.logger import log
+from optimus.networking.udp_utils import query_server_over_udp
 
+
+# TODO: Move to a config file and read from file instead of hardcoding
 ROOT_SERVERS = [
     "198.41.0.4",  # a.root-servers.net_ip
     "199.9.14.201",  # b.root-servers.net_ip
@@ -36,14 +38,11 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             )
         ).get_dns_packet()
         response_code: ResponseCode = response_packet.header.response_code
-        # If the server responds with error or if we get the Answer, return the packet as it is
+        # If the server responds with error or if we get the Answer, return the packet as it is 
         if response_code.value in [
-            ResponseCode.NXDOMAIN.value,
-            ResponseCode.FORMERR.value,
-            ResponseCode.SERVFAIL.value,
-            ResponseCode.NOTIMP.value,
-            ResponseCode.REFUSED.value,
-            ResponseCode.UNKNOWN.value,
+            ResponseCode.NXDOMAIN.value, ResponseCode.FORMERR.value,
+            ResponseCode.SERVFAIL.value, ResponseCode.NOTIMP.value,
+            ResponseCode.REFUSED.value, ResponseCode.UNKNOWN.value,
         ]:
             return response_packet
         if response_code.value == ResponseCode.NOERROR.value and len(response_packet.answers) > 0:
@@ -77,7 +76,6 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             a_type_record: A = random.choice(packet.answers)
             # 'A' Type records are present, pick one of them to retry the lookup on new server
             server_addr = str(a_type_record.address)
-
 
 def handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
     query_packet: DNSPacket = DNSParser(bytearray(received_bytes)).get_dns_packet()

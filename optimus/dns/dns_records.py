@@ -1,5 +1,6 @@
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
+from typing import Any
 
 
 class RecordType(Enum):  # 2 bytes
@@ -9,6 +10,7 @@ class RecordType(Enum):  # 2 bytes
     SOA = 6  # Marks the start of a zone of authority
     MX = 15  # Mail exchange : The host of the mail server for a domain
     AAAA = 28  # IPv6 alias : IPv6 address of a host
+    OPT_RR = 41  # OPT-pseudo RR or meta RR
     UNKNOWN = -1
 
     def from_value(value: int):
@@ -446,5 +448,52 @@ class SOA(Record):
             "retry": self.retry,
             "expire": self.expire,
             "minimum": self.minimum,
+        }
+        return str(rep_dict)
+
+
+# An OPT pseudo-RR (sometimes called a meta-RR) MAY be added to the
+# additional data section of a request. An OPT record does not carry any DNS data
+class OptPseudoRR:  
+    """
+    Doesn't adhere to standard Resource Records so doesn't inherit 'Record' class
+    """
+    name: str  # domain name MUST be '0' (root domain)
+    rtype: int  # 2 bytes, OPT (41)
+    rec_class: int  # 2 bytes, requestor's UDP payload size
+    ttl: int  # 4 bytes, extended RCODE and flags
+    length: int  # 2 bytes, length of all Record data
+    rec_data: Any  # octet stream  {attribute,value} 
+
+    def __init__(
+        self, 
+        # name: str,
+        # rtype: int,
+        # rec_class: int,
+        # ttl: int,
+        # length: int,
+        # rec_data: Any,
+        b: Any,
+    ) -> None:
+        # self.name = name
+        # self.rtype = rtype
+        # self.rec_class = rec_class
+        # self.ttl = ttl
+        # self.length = length
+        # self.rec_data = rec_data
+        self.b = b
+
+    def to_bin(self) -> bytearray:
+        return self.b
+
+    def __repr__(self) -> str:
+        rep_dict = {
+            # "name": self.name,
+            # "type": self.rtype.name,
+            # "class": self.rec_class,
+            # "ttl": self.ttl,
+            # "length": self.length,
+            # "rdata": self.rec_data,
+            "b": self.b
         }
         return str(rep_dict)

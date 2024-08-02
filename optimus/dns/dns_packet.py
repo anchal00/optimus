@@ -1,7 +1,7 @@
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
-from dns.dns_records import Record, RecordClass, RecordType
+from optimus.dns.dns_records import Record, RecordClass, RecordType
 
 
 class ResponseCode(Enum):  # 4 bits
@@ -78,7 +78,7 @@ class DNSHeader:
     is_recursion_desired: bool
     is_recursion_available: bool
     z_flag: int  # 3 bits
-    response_code: int  # 4 bits
+    response_code: ResponseCode  # 4 bits
     question_count: int  # 2 bytes
     answer_count: int  # 2 bytes
     nameserver_records_count: int  # 2 bytes
@@ -95,9 +95,9 @@ class DNSHeader:
         data = (0 if self.is_query else 1) << 7
         data = data | (1 if self.is_recursion_desired else 0)
         dns_header_bin[2] = data
-        # Set RA, Z, RC
         data = (1 if self.is_recursion_available else 0) << 7
         data = data | (self.z_flag << 4)
+        data = data | self.response_code.value
         dns_header_bin[3] = data
         # Set Question Count
         dns_header_bin[4] = (self.question_count & 0xFF00) >> 8
@@ -122,7 +122,7 @@ class DNSHeader:
         is_recursion_desired: bool = False,
         is_recursion_available: bool = False,
         z_flag: int = 0,
-        response_code: int = 0,
+        response_code: Optional[ResponseCode] = None,
         question_count: int = 0,
         answer_count: int = 0,
         nameserver_records_count: int = 0,
@@ -136,7 +136,7 @@ class DNSHeader:
         self.is_recursion_desired = is_recursion_desired
         self.is_recursion_available = is_recursion_available
         self.z_flag = z_flag
-        self.response_code = response_code
+        self.response_code = response_code or ResponseCode.from_value(0)
         self.question_count = question_count
         self.answer_count = answer_count
         self.nameserver_records_count = nameserver_records_count

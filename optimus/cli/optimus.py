@@ -1,8 +1,8 @@
 import sys
 from argparse import ArgumentParser
 
-from optimus_server.server import run_server
-from version.__version__ import VERSION
+from optimus.optimus_server.server import run_server
+from optimus.__version__ import VERSION
 
 
 def main(argv):
