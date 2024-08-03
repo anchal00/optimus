@@ -1,3 +1,12 @@
 [build-system]
 requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+exclude = [
+    'build',  # TOML literal string (single-quotes, no escaping necessary)
+    '^\..*',  # TOML basic string (double-quotes, backslash and other characters need escaping)
+]

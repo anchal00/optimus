@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-META = {}
+META: dict = {}
 with open(os.path.join(here, "optimus", "__version__.py")) as f:
     exec(f.read(), META)
 
