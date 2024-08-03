@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from optimus.dns.dns_records import Record, RecordClass, RecordType, NS, A, AAAA, NS
 
@@ -25,7 +25,8 @@ class ResponseCode(Enum):  # 4 bits
 
     UNKNOWN = -1
 
-    def from_value(value: int):
+    @classmethod
+    def from_value(cls, value: int):
         for rec in ResponseCode:
             if rec.value == value:
                 return rec
@@ -117,7 +118,7 @@ class DNSHeader:
 
     def __init__(
         self,
-        id: int = None,
+        id: int, 
         is_query: bool = False,
         opcode: int = 0,
         is_authoritative_answer: bool = False,
@@ -167,11 +168,11 @@ class DNSHeader:
 class DNSPacket:
     def __init__(
         self,
-        dns_header: DNSHeader = None,
-        questions: List[Question] = None,
-        answers: List[Record] = None,
-        nameserver_records: List[NS] = None,
-        additional_records: List[A | AAAA | NS ] = None,
+        dns_header: DNSHeader,
+        questions: List[Question],
+        answers: Optional[List[Record]] = None,
+        nameserver_records: Optional[List[NS]] = None,
+        additional_records: Optional[List[Union[A, AAAA, NS]]] = None,
     ) -> None:
         self.header = dns_header
         self.questions = questions if questions else []

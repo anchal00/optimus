@@ -15,9 +15,9 @@ def query_server_over_udp(bin_data: bytearray, server_addr: str) -> bytes:
         sock.send(bin_data)
         packet_bytes = sock.recv(600)  # Read 600 bytes only for now
         return packet_bytes
-    except TimeoutError:
+    except TimeoutError as texc:
         log_error(f"Error: Time out, couldn't complete lookup on {server_addr}")
-        return None
+        raise Exception("Socket Timeout Error") from texc 
     finally:
         sock.shutdown(socket.SHUT_RDWR)
         sock.close()
