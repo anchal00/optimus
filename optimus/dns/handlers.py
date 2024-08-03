@@ -29,7 +29,7 @@ ROOT_SERVERS = [
 
 def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
-    server_addr = random.choice(ROOT_SERVERS)
+    server_addr: str  = random.choice(ROOT_SERVERS)
     while True:
         response_packet: DNSPacket = DNSParser(
             bytearray(query_server_over_udp(qpacket.to_bin(), server_addr))
@@ -57,16 +57,13 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             return response_packet
         # Try to find a 'NS' type record with a corresponding 'A' type record in the additional section
         # If found, switch Nameserver and retry the loop i.e perform the lookup on new NameServer again
-        ns_record_set: set = {
+        ns_record_set: set[str] = {
             ns_rec.nsdname for ns_rec in response_packet.nameserver_records
         }
-        additional_records: List[Record] = response_packet.additional_records
-        if response_packet.additional_records:
+        additional_records: List[A] = filter(lambda rec: rec.rtype.value == RecordType.A.value , response_packet.additional_records)
+        if additional_records:
             for ad_rec in additional_records:
-                if (
-                    ad_rec.name in ns_record_set
-                    and ad_rec.rtype.value == RecordType.A.value
-                ):
+                if ad_rec.name in ns_record_set:
                     server_addr = str(ad_rec.address)
                     break
         else:
@@ -75,7 +72,7 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             packet: DNSPacket = __perform_recursive_lookup(
                 DNSPacket(
                     dns_header=DNSHeader(
-                        id=random.randint(0, math.pow(2, 16) - 1),
+                        id=random.randint(0, int(math.pow(2, 16)) - 1),
                         is_query=True,
                         question_count=1,
                     ),
