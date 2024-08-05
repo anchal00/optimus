@@ -3,18 +3,8 @@ from typing import List, Union
 
 from optimus.bin_data_reader.bin_reader import BinReader
 from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.dns_records import (
-    AAAA,
-    CNAME,
-    MX,
-    NS,
-    SOA,
-    A,
-    OptPseudoRR,
-    Record,
-    RecordClass,
-    RecordType,
-)
+from optimus.dns.dns_records import (AAAA, CNAME, MX, NS, SOA, A, OptPseudoRR,
+                                     Record, RecordClass, RecordType)
 
 
 class DNSParser:

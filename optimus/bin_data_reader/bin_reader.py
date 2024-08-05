@@ -11,12 +11,12 @@ class BinReader:
 
     def read_bytes_and_move(self, bytes_to_read) -> bytearray:
         cur_ptr_pos = self.get_cur_ptr_pos()
-        return self.__bin_data_block[cur_ptr_pos: cur_ptr_pos + bytes_to_read]
+        return self.__bin_data_block[cur_ptr_pos : cur_ptr_pos + bytes_to_read]
 
     def parse_bytes_to_int(self, bytes_to_parse: int) -> int:
         cur_ptr_pos = self.get_cur_ptr_pos()
         to_be_read_data_block = self.__bin_data_block[
-            cur_ptr_pos: cur_ptr_pos + bytes_to_parse
+            cur_ptr_pos : cur_ptr_pos + bytes_to_parse
         ]
         data = 0
         for x in to_be_read_data_block:
