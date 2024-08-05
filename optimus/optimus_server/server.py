@@ -14,4 +14,3 @@ def run_server(port: int, worker_threads: int):
         while True:
             received_bytes, address = master_socket.recvfrom(600)
             pool.submit(handle_request, master_socket, received_bytes, address)
-            handle_request(master_socket, received_bytes, address)

@@ -81,6 +81,7 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
                         id=random.randint(0, int(math.pow(2, 16)) - 1),
                         is_query=True,
                         question_count=1,
+                        is_recursion_desired=True,
                     ),
                     questions=[
                         Question(ns_record.nsdname, RecordType.A, RecordClass.IN)
