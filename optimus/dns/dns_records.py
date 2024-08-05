@@ -1,5 +1,6 @@
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
+from typing import Any
 
 
 class RecordType(Enum):  # 2 bytes
@@ -9,9 +10,11 @@ class RecordType(Enum):  # 2 bytes
     SOA = 6  # Marks the start of a zone of authority
     MX = 15  # Mail exchange : The host of the mail server for a domain
     AAAA = 28  # IPv6 alias : IPv6 address of a host
+    OPT_RR = 41  # OPT-pseudo RR or meta RR
     UNKNOWN = -1
 
-    def from_value(value: int):
+    @classmethod
+    def from_value(cls, value: int):
         for rec in RecordType:
             if rec.value == value:
                 return rec
@@ -22,7 +25,8 @@ class RecordClass(Enum):  # 2 bytes
     IN = 1  # Internet : Represents Internet Class
     UNKNOWN = -1
 
-    def from_value(value: int):
+    @classmethod
+    def from_value(cls, value: int):
         for rec in RecordClass:
             if rec.value == value:
                 return rec
@@ -37,11 +41,7 @@ class Record:
     length: int  # 2 bytes : Length of content in a concrete record
 
     def __init__(
-        self, name: str,
-        rtype: RecordType,
-        rclass: RecordClass,
-        ttl: int,
-        length: int
+        self, name: str, rtype: RecordType, rclass: RecordClass, ttl: int, length: int
     ) -> None:
         self.name = name
         self.rtype = rtype
@@ -51,12 +51,14 @@ class Record:
 
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = bytearray(0)
-        labels = self.name.split('.')
+        labels = self.name.split(".")
         for label in labels:
             # Write label's length
-            dns_record_bin.append(len(label))  # TODO: Add check to ensure that label length is <=63
+            dns_record_bin.append(
+                len(label)
+            )  # TODO: Add check to ensure that label length is <=63
             for ch in label:
-                data = ord(ch) if ch != '.' else 0
+                data = ord(ch) if ch != "." else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
         # Set Type (In 2 byte format)
@@ -81,7 +83,7 @@ class Record:
             "type": self.rtype.name,
             "class": self.rec_class.name,
             "ttl": self.ttl,
-            "length": self.length
+            "length": self.length,
         }
         return str(rep_dict)
 
@@ -91,12 +93,13 @@ class A(Record):
     address: IPv4Address
 
     def __init__(
-        self, name: str,
+        self,
+        name: str,
         rtype: RecordType,
         rclass: RecordClass,
         ttl: int,
         length: int,
-        address: IPv4Address
+        address: IPv4Address,
     ) -> None:
         super().__init__(name, rtype, rclass, ttl, length)
         self.address = address
@@ -117,7 +120,7 @@ class A(Record):
             "class": self.rec_class.name,
             "ttl": self.ttl,
             "length": self.length,
-            "address": self.address
+            "address": self.address,
         }
         return str(rep_dict)
 
@@ -127,12 +130,13 @@ class AAAA(Record):
     address: IPv6Address
 
     def __init__(
-        self, name: str,
+        self,
+        name: str,
         rtype: RecordType,
         rclass: RecordClass,
         ttl: int,
         length: int,
-        address: IPv6Address
+        address: IPv6Address,
     ) -> None:
         super().__init__(name, rtype, rclass, ttl, length)
         self.address = address
@@ -162,12 +166,12 @@ class AAAA(Record):
         seventh_2_bytes = (data >> 16) & 0xFFFF
         dns_record_bin.append((seventh_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((seventh_2_bytes & 0xFF))
-        eighth_2_bytes = (data & 0xFFFF)
+        eighth_2_bytes = data & 0xFFFF
         dns_record_bin.append((eighth_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((eighth_2_bytes & 0xFF))
         # Modify length to reflect the actual bytes present in the record
-        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
-        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
+        dns_record_bin[cur_len - 2] = (self.length & 0xFF00) >> 8
+        dns_record_bin[cur_len - 1] = self.length & 0xFF
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -177,7 +181,7 @@ class AAAA(Record):
             "class": self.rec_class.name,
             "ttl": self.ttl,
             "length": self.length,
-            "address": self.address
+            "address": self.address,
         }
         return str(rep_dict)
 
@@ -187,12 +191,13 @@ class CNAME(Record):
     cname: str
 
     def __init__(
-        self, name: str,
+        self,
+        name: str,
         rtype: RecordType,
         rclass: RecordClass,
         ttl: int,
         length: int,
-        cname: str
+        cname: str,
     ) -> None:
         super().__init__(name, rtype, rclass, ttl, length)
         self.cname = cname
@@ -200,19 +205,19 @@ class CNAME(Record):
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
         cur_len = len(dns_record_bin)
-        labels = self.cname.split('.')
+        labels = self.cname.split(".")
         for label in labels:
             # Write label's length
             dns_record_bin.append(len(label))
             for ch in label:
-                data = ord(ch) if ch != '.' else 0
+                data = ord(ch) if ch != "." else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
         new_len = len(dns_record_bin)
         self.length = new_len - cur_len
         # Modify length to reflect the actual bytes present in the record
-        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
-        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
+        dns_record_bin[cur_len - 2] = (self.length & 0xFF00) >> 8
+        dns_record_bin[cur_len - 1] = self.length & 0xFF
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -222,7 +227,7 @@ class CNAME(Record):
             "class": self.rec_class.name,
             "ttl": self.ttl,
             "length": self.length,
-            "cname": self.cname
+            "cname": self.cname,
         }
         return str(rep_dict)
 
@@ -230,17 +235,22 @@ class CNAME(Record):
 # Record Type MX, representing the host of the mail server for a domain
 class MX(Record):
     # Lower pref value => High Priority
-    preference: int  # 2 bytes : Specifies the preference given to this record among others
-    exchange: str  # Domain name which specifies a host willing to act as a mail exchange
+    preference: (
+        int  # 2 bytes : Specifies the preference given to this record among others
+    )
+    exchange: (
+        str  # Domain name which specifies a host willing to act as a mail exchange
+    )
 
     def __init__(
-        self, name: str,
+        self,
+        name: str,
         rtype: RecordType,
         rclass: RecordClass,
         ttl: int,
         length: int,
         preference: int,
-        exchange: str
+        exchange: str,
     ) -> None:
         super().__init__(name, rtype, rclass, ttl, length)
         self.preference = preference
@@ -251,19 +261,19 @@ class MX(Record):
         cur_len = len(dns_record_bin)
         dns_record_bin.append((self.preference & 0xFF00) >> 8)
         dns_record_bin.append(self.preference & 0xFF)
-        labels = self.exchange.split('.')
+        labels = self.exchange.split(".")
         for label in labels:
             # Write label's length
             dns_record_bin.append(len(label))
             for ch in label:
-                data = ord(ch) if ch != '.' else 0
+                data = ord(ch) if ch != "." else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
         new_len = len(dns_record_bin)
         self.length = new_len - cur_len
         # Modify length to reflect the actual bytes present in the record
-        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
-        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
+        dns_record_bin[cur_len - 2] = (self.length & 0xFF00) >> 8
+        dns_record_bin[cur_len - 1] = self.length & 0xFF
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -274,7 +284,7 @@ class MX(Record):
             "ttl": self.ttl,
             "length": self.length,
             "preference": self.preference,
-            "exchange": self.exchange
+            "exchange": self.exchange,
         }
         return str(rep_dict)
 
@@ -284,12 +294,13 @@ class NS(Record):
     nsdname: str  # Domain name which specifies a host which should be authoritative for specified class and domain
 
     def __init__(
-        self, name: str,
+        self,
+        name: str,
         rtype: RecordType,
         rclass: RecordClass,
         ttl: int,
         length: int,
-        nsdname: str
+        nsdname: str,
     ) -> None:
         super().__init__(name, rtype, rclass, ttl, length)
         self.nsdname = nsdname
@@ -297,19 +308,19 @@ class NS(Record):
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
         cur_len = len(dns_record_bin)
-        labels = self.nsdname.split('.')
+        labels = self.nsdname.split(".")
         for label in labels:
             # Write label's length
             dns_record_bin.append(len(label))
             for ch in label:
-                data = ord(ch) if ch != '.' else 0
+                data = ord(ch) if ch != "." else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
         new_len = len(dns_record_bin)
         self.length = new_len - cur_len
         # Modify length to reflect the actual bytes present in the record
-        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
-        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
+        dns_record_bin[cur_len - 2] = (self.length & 0xFF00) >> 8
+        dns_record_bin[cur_len - 1] = self.length & 0xFF
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -319,7 +330,7 @@ class NS(Record):
             "class": self.rec_class.name,
             "ttl": self.ttl,
             "length": self.length,
-            "nsdname": self.nsdname
+            "nsdname": self.nsdname,
         }
         return str(rep_dict)
 
@@ -357,7 +368,8 @@ class SOA(Record):
     minimum: int
 
     def __init__(
-        self, name: str,
+        self,
+        name: str,
         rtype: RecordType,
         rclass: RecordClass,
         ttl: int,
@@ -368,7 +380,7 @@ class SOA(Record):
         refresh: int,
         retry: int,
         expire: int,
-        minimum: int
+        minimum: int,
     ) -> None:
         super().__init__(name, rtype, rclass, ttl, length)
         self.mname = mname
@@ -382,21 +394,21 @@ class SOA(Record):
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
         cur_len = len(dns_record_bin)
-        labels = self.mname.split('.')
+        labels = self.mname.split(".")
         for label in labels:
             # Write label's length
             dns_record_bin.append(len(label))
             for ch in label:
-                data = ord(ch) if ch != '.' else 0
+                data = ord(ch) if ch != "." else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
 
-        labels = self.rname.split('.')
+        labels = self.rname.split(".")
         for label in labels:
             # Write label's length
             dns_record_bin.append(len(label))
             for ch in label:
-                data = ord(ch) if ch != '.' else 0
+                data = ord(ch) if ch != "." else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
 
@@ -428,8 +440,8 @@ class SOA(Record):
         new_len = len(dns_record_bin)
         self.length = new_len - cur_len
         # Modify length to reflect the actual bytes present in the record
-        dns_record_bin[cur_len - 2] = ((self.length & 0xFF00) >> 8)
-        dns_record_bin[cur_len - 1] = (self.length & 0xFF)
+        dns_record_bin[cur_len - 2] = (self.length & 0xFF00) >> 8
+        dns_record_bin[cur_len - 1] = self.length & 0xFF
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -446,5 +458,53 @@ class SOA(Record):
             "retry": self.retry,
             "expire": self.expire,
             "minimum": self.minimum,
+        }
+        return str(rep_dict)
+
+
+# An OPT pseudo-RR (sometimes called a meta-RR) MAY be added to the
+# additional data section of a request. An OPT record does not carry any DNS data
+class OptPseudoRR:
+    """
+    Doesn't adhere to standard Resource Records so doesn't inherit 'Record' class
+    """
+
+    name: str  # domain name MUST be '0' (root domain)
+    rtype: int  # 2 bytes, OPT (41)
+    rec_class: int  # 2 bytes, requestor's UDP payload size
+    ttl: int  # 4 bytes, extended RCODE and flags
+    length: int  # 2 bytes, length of all Record data
+    rec_data: Any  # octet stream  {attribute,value}
+
+    def __init__(
+        self,
+        # name: str,
+        # rtype: int,
+        # rec_class: int,
+        # ttl: int,
+        # length: int,
+        # rec_data: Any,
+        b: bytearray,
+    ) -> None:
+        # self.name = name
+        # self.rtype = rtype
+        # self.rec_class = rec_class
+        # self.ttl = ttl
+        # self.length = length
+        # self.rec_data = rec_data
+        self.b = b
+
+    def to_bin(self) -> bytearray:
+        return self.b
+
+    def __repr__(self) -> str:
+        rep_dict = {
+            # "name": self.name,
+            # "type": self.rtype.name,
+            # "class": self.rec_class,
+            # "ttl": self.ttl,
+            # "length": self.length,
+            # "rdata": self.rec_data,
+            "b": self.b
         }
         return str(rep_dict)

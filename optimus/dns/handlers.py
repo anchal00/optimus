@@ -1,14 +1,16 @@
 import math
 import random
 import socket
-from typing import List
+from typing import List, Union
 
-from dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from dns.dns_parser import DNSParser
-from dns.dns_records import NS, A, Record, RecordClass, RecordType
-from logging_utils.logger import log
-from networking.udp_utils import query_server_over_udp
+from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
+from optimus.dns.dns_parser import DNSParser
+from optimus.dns.dns_records import (AAAA, NS, A, Record, RecordClass,
+                                     RecordType)
+from optimus.logging_config.logger import log
+from optimus.networking.udp_utils import query_server_over_udp
 
+# TODO: Move to a config file and read from file instead of hardcoding
 ROOT_SERVERS = [
     "198.41.0.4",  # a.root-servers.net_ip
     "199.9.14.201",  # b.root-servers.net_ip
@@ -28,12 +30,10 @@ ROOT_SERVERS = [
 
 def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
-    server_addr = random.choice(ROOT_SERVERS)
+    server_addr: str = random.choice(ROOT_SERVERS)
     while True:
         response_packet: DNSPacket = DNSParser(
-            bytearray(
-                query_server_over_udp(qpacket.to_bin(), server_addr)
-            )
+            bytearray(query_server_over_udp(qpacket.to_bin(), server_addr))
         ).get_dns_packet()
         response_code: ResponseCode = response_packet.header.response_code
         # If the server responds with error or if we get the Answer, return the packet as it is
@@ -46,7 +46,10 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             ResponseCode.UNKNOWN.value,
         ]:
             return response_packet
-        if response_code.value == ResponseCode.NOERROR.value and len(response_packet.answers) > 0:
+        if (
+            response_code.value == ResponseCode.NOERROR.value
+            and len(response_packet.answers) > 0
+        ):
             return response_packet
         # No NS record is found, we need to return with response packet we already have
         if not response_packet.nameserver_records:
@@ -55,11 +58,18 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             return response_packet
         # Try to find a 'NS' type record with a corresponding 'A' type record in the additional section
         # If found, switch Nameserver and retry the loop i.e perform the lookup on new NameServer again
-        ns_record_set: set = {ns_rec.nsdname for ns_rec in response_packet.nameserver_records}
-        additional_records: List[Record] = response_packet.additional_records
-        if response_packet.additional_records:
+        ns_record_set: set[str] = {
+            ns_rec.nsdname for ns_rec in response_packet.nameserver_records
+        }
+        additional_records: List[Union[A, AAAA, NS]] = (
+            response_packet.additional_records
+        )
+        if additional_records:
             for ad_rec in additional_records:
-                if ad_rec.name in ns_record_set and ad_rec.rtype.value == RecordType.A.value:
+                if (
+                    ad_rec.rtype.value == RecordType.A.value
+                    and ad_rec.name in ns_record_set
+                ):
                     server_addr = str(ad_rec.address)
                     break
         else:
@@ -67,23 +77,35 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             ns_record: NS = random.choice(response_packet.nameserver_records)
             packet: DNSPacket = __perform_recursive_lookup(
                 DNSPacket(
-                    dns_header=DNSHeader(id=random.randint(0, math.pow(2, 16)-1), is_query=True, question_count=1),
-                    questions=[Question(ns_record.nsdname, RecordType.A, RecordClass.IN)]
+                    dns_header=DNSHeader(
+                        id=random.randint(0, int(math.pow(2, 16)) - 1),
+                        is_query=True,
+                        question_count=1,
+                    ),
+                    questions=[
+                        Question(ns_record.nsdname, RecordType.A, RecordClass.IN)
+                    ],
                 )
             )
             # No 'A' Type record is found, we need to return with response packet we already have
             if not packet.answers:
                 return response_packet
-            a_type_record: A = random.choice(packet.answers)
+            a_type_record: Record = random.choice(packet.answers)
             # 'A' Type records are present, pick one of them to retry the lookup on new server
             server_addr = str(a_type_record.address)
 
 
-def handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
+def handle_request(
+    master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]
+) -> None:
     query_packet: DNSPacket = DNSParser(bytearray(received_bytes)).get_dns_packet()
     # TODO: Send query for each question in query_packet
-    log(f"Received query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
+    log(
+        f"Received query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}"
+    )
     response_packet: DNSPacket = __perform_recursive_lookup(query_packet)
     response_packet.header.is_recursion_available = True
     master_socket.sendto(response_packet.to_bin(), return_address)
-    log(f"Query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype} successfully processed")
+    log(
+        f"Query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype} successfully processed"
+    )
