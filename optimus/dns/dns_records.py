@@ -13,7 +13,8 @@ class RecordType(Enum):  # 2 bytes
     OPT_RR = 41  # OPT-pseudo RR or meta RR
     UNKNOWN = -1
 
-    def from_value(value: int):
+    @classmethod
+    def from_value(cls, value: int):
         for rec in RecordType:
             if rec.value == value:
                 return rec
@@ -24,7 +25,8 @@ class RecordClass(Enum):  # 2 bytes
     IN = 1  # Internet : Represents Internet Class
     UNKNOWN = -1
 
-    def from_value(value: int):
+    @classmethod
+    def from_value(cls, value: int):
         for rec in RecordClass:
             if rec.value == value:
                 return rec
@@ -482,7 +484,7 @@ class OptPseudoRR:
         # ttl: int,
         # length: int,
         # rec_data: Any,
-        b: Any,
+        b: bytearray,
     ) -> None:
         # self.name = name
         # self.rtype = rtype
