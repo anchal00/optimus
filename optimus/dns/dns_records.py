@@ -484,7 +484,7 @@ class OptPseudoRR:
         # ttl: int,
         # length: int,
         # rec_data: Any,
-        b: bytearray
+        b: bytearray,
     ) -> None:
         # self.name = name
         # self.rtype = rtype

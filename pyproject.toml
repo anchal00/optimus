@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
+ignore_missing_imports = true
 exclude = [
     'build',  # TOML literal string (single-quotes, no escaping necessary)
     '^\..*',  # TOML basic string (double-quotes, backslash and other characters need escaping)

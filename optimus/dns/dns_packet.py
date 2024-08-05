@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import List, Optional, Union
 
-from optimus.dns.dns_records import Record, RecordClass, RecordType, NS, A, AAAA, NS
+from optimus.dns.dns_records import (AAAA, NS, A, Record, RecordClass,
+                                     RecordType)
 
 
 class ResponseCode(Enum):  # 4 bits
@@ -118,7 +119,7 @@ class DNSHeader:
 
     def __init__(
         self,
-        id: int, 
+        id: int,
         is_query: bool = False,
         opcode: int = 0,
         is_authoritative_answer: bool = False,

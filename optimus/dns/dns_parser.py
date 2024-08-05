@@ -1,14 +1,14 @@
 from ipaddress import IPv4Address, IPv6Address
-from typing import List, Optional, Union
+from typing import List, Union
 
 from optimus.bin_data_reader.bin_reader import BinReader
 from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
 from optimus.dns.dns_records import (
     AAAA,
+    CNAME,
     MX,
     NS,
     SOA,
-    CNAME,
     A,
     OptPseudoRR,
     Record,
@@ -154,7 +154,9 @@ class DNSParser:
             questions.append(Question(name, rtype, qclass))
         return questions
 
-    def __read_response_records(self) -> Union[Record, A, AAAA, CNAME, MX, NS, SOA, OptPseudoRR]:
+    def __read_response_records(
+        self,
+    ) -> Union[Record, A, AAAA, CNAME, MX, NS, SOA, OptPseudoRR]:
         name: str = self.__parse_record_name()
         rtype: RecordType = RecordType.from_value(
             self.__bin_reader.parse_bytes_to_int_and_move(2)
@@ -184,18 +186,14 @@ class DNSParser:
             ttl = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length = self.__bin_reader.parse_bytes_to_int_and_move(2)
             ipv6_addr_int: int = self.__bin_reader.parse_bytes_to_int_and_move(16)
-            record = AAAA(
-                name, rtype, rclass, ttl, length, IPv6Address(ipv6_addr_int)
-            )
+            record = AAAA(name, rtype, rclass, ttl, length, IPv6Address(ipv6_addr_int))
         elif rtype.value == RecordType.CNAME.value:
-            rclasss = RecordClass.from_value(
+            rclass = RecordClass.from_value(
                 self.__bin_reader.parse_bytes_to_int_and_move(2)
             )
             ttl = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length = self.__bin_reader.parse_bytes_to_int_and_move(2)
-            record = CNAME(
-                name, rtype, rclass, ttl, length, self.__parse_record_name()
-            )
+            record = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
         elif rtype.value == RecordType.MX.value:
             rclass = RecordClass.from_value(
                 self.__bin_reader.parse_bytes_to_int_and_move(2)
@@ -217,9 +215,7 @@ class DNSParser:
             )
             ttl = self.__bin_reader.parse_bytes_to_int_and_move(4)
             length = self.__bin_reader.parse_bytes_to_int_and_move(2)
-            record = NS(
-                name, rtype, rclass, ttl, length, self.__parse_record_name()
-            )
+            record = NS(name, rtype, rclass, ttl, length, self.__parse_record_name())
         elif rtype.value == RecordType.SOA.value:
             rclass = RecordClass.from_value(
                 self.__bin_reader.parse_bytes_to_int_and_move(2)
@@ -268,15 +264,15 @@ class DNSParser:
             answers.append(self.__read_response_records())
         return answers
 
-    def __get_additional_section(self, additional_records_count: int) -> List[Union[A, AAAA, NS]]:
+    def __get_additional_section(
+        self, additional_records_count: int
+    ) -> List[Union[A, AAAA, NS]]:
         ad_records: List[Union[A, AAAA, NS]] = []
         for _ in range(0, additional_records_count):
             ad_records.append(self.__read_response_records())
         return ad_records
 
-    def __get_authoritative_section(
-        self, nameserver_records_count: int
-    ) -> List[NS]:
+    def __get_authoritative_section(self, nameserver_records_count: int) -> List[NS]:
         ns_records: List[Record] = []
         for _ in range(0, nameserver_records_count):
             ns_records.append(self.__read_response_records())

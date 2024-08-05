@@ -5,7 +5,8 @@ from typing import List, Union
 
 from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
 from optimus.dns.dns_parser import DNSParser
-from optimus.dns.dns_records import NS, A, AAAA, Record, RecordClass, RecordType
+from optimus.dns.dns_records import (AAAA, NS, A, Record, RecordClass,
+                                     RecordType)
 from optimus.logging_config.logger import log
 from optimus.networking.udp_utils import query_server_over_udp
 
@@ -29,7 +30,7 @@ ROOT_SERVERS = [
 
 def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
-    server_addr: str  = random.choice(ROOT_SERVERS)
+    server_addr: str = random.choice(ROOT_SERVERS)
     while True:
         response_packet: DNSPacket = DNSParser(
             bytearray(query_server_over_udp(qpacket.to_bin(), server_addr))
@@ -60,10 +61,15 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
         ns_record_set: set[str] = {
             ns_rec.nsdname for ns_rec in response_packet.nameserver_records
         }
-        additional_records: List[Union[A, AAAA, NS]] = response_packet.additional_records
+        additional_records: List[Union[A, AAAA, NS]] = (
+            response_packet.additional_records
+        )
         if additional_records:
             for ad_rec in additional_records:
-                if ad_rec.rtype.value == RecordType.A.value and ad_rec.name in ns_record_set:
+                if (
+                    ad_rec.rtype.value == RecordType.A.value
+                    and ad_rec.name in ns_record_set
+                ):
                     server_addr = str(ad_rec.address)
                     break
         else:
