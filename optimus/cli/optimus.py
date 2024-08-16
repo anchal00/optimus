@@ -6,6 +6,9 @@ from optimus.optimus_server.server import run_server
 
 
 def main(argv):
+    DEFAULT_WORKER_THREADS = 10
+    DEFAULT_PORT = 53
+
     arg_parser = ArgumentParser(
         prog="Optimus",
         description="A toy DNS server made for fun ;)",
@@ -16,15 +19,15 @@ def main(argv):
         "-p",
         metavar="PORT",
         type=int,
-        default=53,
-        help="Port to run the server on (defaults to 53)",
+        default=DEFAULT_PORT,
+        help=f"Port to run the server on (defaults to {DEFAULT_PORT})",
     )
     arg_parser.add_argument(
         "-t",
         metavar="THREADS",
         type=int,
-        default=100,
-        help="Number of worker threads to spin up for handling requests (defaults to 100)",
+        default=DEFAULT_WORKER_THREADS,
+        help=f"Number of worker threads to spin up for handling requests (defaults to {DEFAULT_WORKER_THREADS})",
     )
     arg_parser.add_argument("-v", action="store_true", help="Get version info")
     args = arg_parser.parse_args(argv)
