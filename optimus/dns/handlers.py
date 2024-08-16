@@ -5,8 +5,7 @@ from typing import List, Union
 
 from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
 from optimus.dns.dns_parser import DNSParser
-from optimus.dns.dns_records import (AAAA, NS, A, Record, RecordClass,
-                                     RecordType)
+from optimus.dns.dns_records import AAAA, NS, A, Record, RecordClass, RecordType
 from optimus.logging_config.logger import log
 from optimus.networking.udp_utils import query_server_over_udp
 
@@ -32,9 +31,15 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
     server_addr: str = random.choice(ROOT_SERVERS)
     while True:
+        dns_server_response: bytes = query_server_over_udp(
+            qpacket.to_bin(), server_addr
+        )
         response_packet: DNSPacket = DNSParser(
-            bytearray(query_server_over_udp(qpacket.to_bin(), server_addr))
+            bytearray(dns_server_response)
         ).get_dns_packet()
+        if not dns_server_response:
+            response_packet.header.response_code = ResponseCode.SERVFAIL
+            return response_packet
         response_code: ResponseCode = response_packet.header.response_code
         # If the server responds with error or if we get the Answer, return the packet as it is
         if response_code.value in [
