@@ -6,7 +6,7 @@
 2. Run `pip install . `
 
 
-#####  How to run ?
+####  How to run ?
 
 ```
 usage: Optimus [-h] [-r] [-p PORT] [-t THREADS]
@@ -25,13 +25,13 @@ You may not be able to run Optimus on Port 53 as your OS already is likely to be
 
 To workaround this, you may
 
-1. Either, disable your exiting resolver and run Optimus on port 53 which might also require [root privileges](####Running-Optimus-with-Root-privileges).
-2. Or, Simply run the Optimus server on some other port.
+1. Either, disable your existing resolver and run Optimus on port 53 (which might also require root privileges)[1].
+2. Or, Simply run the Optimus server on another port.
 
 
-#### Running Optimus with Root privileges:
+#### [1] Running Optimus with Root privileges:
 
-There could be better ways to do this but this is the only makeshift solution that I have at this moment) 
+(There might be better ways to do this, but this is the temporary solution available at the moment)
 
 Once the existing resolver is disabled and Port 53 is freed up
 
