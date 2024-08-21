@@ -17,7 +17,7 @@ optional arguments:
   -h, --help  show this help message and exit
   -r          Run DNS server
   -p PORT     Port to run the server on (defaults to 53)
-  -t THREADS  Number of worker threads to spin up for handling requests (defaults to 100)
+  -t THREADS  Number of worker threads to spin up for handling requests (defaults to 10)
 ```
 
 #### Note:
