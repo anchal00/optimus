@@ -1,12 +1,10 @@
 import math
 import random
-import socket
 from typing import List, Union
 
 from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
 from optimus.dns.parser.parse import DNSParser
 from optimus.dns.models.records import AAAA, NS, A, Record, RecordClass, RecordType
-from optimus.logging.logger import log
 from optimus.networking.udp import query_server_over_udp
 
 # TODO: Move to a config file and read from file instead of hardcoding
@@ -27,7 +25,8 @@ ROOT_SERVERS = [
 ]
 
 
-def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
+# TODO: Improve logging
+def resolve(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
     server_addr: str = random.choice(ROOT_SERVERS)
     while True:
@@ -64,7 +63,7 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
         else:
             # Pick a random NS record and perform lookup for that
             ns_record: NS = random.choice(response_packet.nameserver_records)
-            packet: DNSPacket = __perform_recursive_lookup(
+            packet: DNSPacket = __resolve(
                 DNSPacket(
                     dns_header=DNSHeader(
                         id=random.randint(0, int(math.pow(2, 16)) - 1),
@@ -81,13 +80,3 @@ def __perform_recursive_lookup(qpacket: DNSPacket) -> DNSPacket:
             a_type_record: Record = random.choice(packet.answers)
             # 'A' Type records are present, pick one of them to retry the lookup on new server
             server_addr = str(a_type_record.address)
-
-
-def handle_request(master_socket: socket.socket, received_bytes: bytes, return_address: tuple[str, int]) -> None:
-    query_packet: DNSPacket = DNSParser(bytearray(received_bytes)).get_dns_packet()
-    # TODO: Send query for each question in query_packet
-    log(f"Received query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
-    response_packet: DNSPacket = __perform_recursive_lookup(query_packet)
-    response_packet.header.is_recursion_available = True
-    master_socket.sendto(response_packet.to_bin(), return_address)
-    log(f"Query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype} successfully processed")
