@@ -63,7 +63,7 @@ def resolve(qpacket: DNSPacket) -> DNSPacket:
         else:
             # Pick a random NS record and perform lookup for that
             ns_record: NS = random.choice(response_packet.nameserver_records)
-            packet: DNSPacket = __resolve(
+            packet: DNSPacket = resolve(
                 DNSPacket(
                     dns_header=DNSHeader(
                         id=random.randint(0, int(math.pow(2, 16)) - 1),

@@ -1,7 +1,7 @@
 import socket
 from concurrent import futures
 
-from optimus.dns.handlers import handle_request
+from optimus.optimus_server.router import handle_request
 from optimus.logging.logger import log
 
 
