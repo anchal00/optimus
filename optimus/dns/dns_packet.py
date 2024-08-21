@@ -1,8 +1,7 @@
 from enum import Enum
 from typing import List, Optional, Union
 
-from optimus.dns.dns_records import (AAAA, NS, A, Record, RecordClass,
-                                     RecordType)
+from optimus.dns.dns_records import AAAA, NS, A, Record, RecordClass, RecordType
 
 
 class ResponseCode(Enum):  # 4 bits
@@ -49,9 +48,7 @@ class Question:
         labels = self.name.split(".")
         for label in labels:
             # Write label's length
-            dns_question_bin.append(
-                len(label)
-            )  # TODO: Add check to ensure that label length is <=63
+            dns_question_bin.append(len(label))  # TODO: Add check to ensure that label length is <=63
             for ch in label:
                 data = ord(ch) if ch != "." else 0
                 dns_question_bin.append(data)

@@ -40,9 +40,7 @@ class Record:
     ttl: int  # 4 bytes : Time-to-Live in seconds
     length: int  # 2 bytes : Length of content in a concrete record
 
-    def __init__(
-        self, name: str, rtype: RecordType, rclass: RecordClass, ttl: int, length: int
-    ) -> None:
+    def __init__(self, name: str, rtype: RecordType, rclass: RecordClass, ttl: int, length: int) -> None:
         self.name = name
         self.rtype = rtype
         self.rec_class = rclass
@@ -54,9 +52,7 @@ class Record:
         labels = self.name.split(".")
         for label in labels:
             # Write label's length
-            dns_record_bin.append(
-                len(label)
-            )  # TODO: Add check to ensure that label length is <=63
+            dns_record_bin.append(len(label))  # TODO: Add check to ensure that label length is <=63
             for ch in label:
                 data = ord(ch) if ch != "." else 0
                 dns_record_bin.append(data)
@@ -235,12 +231,8 @@ class CNAME(Record):
 # Record Type MX, representing the host of the mail server for a domain
 class MX(Record):
     # Lower pref value => High Priority
-    preference: (
-        int  # 2 bytes : Specifies the preference given to this record among others
-    )
-    exchange: (
-        str  # Domain name which specifies a host willing to act as a mail exchange
-    )
+    preference: int  # 2 bytes : Specifies the preference given to this record among others
+    exchange: str  # Domain name which specifies a host willing to act as a mail exchange
 
     def __init__(
         self,
