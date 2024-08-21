@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional, Union
 
-from optimus.dns.dns_records import AAAA, NS, A, Record, RecordClass, RecordType
+from optimus.dns.models.records import AAAA, NS, A, Record, RecordClass, RecordType
 
 
 class ResponseCode(Enum):  # 4 bits

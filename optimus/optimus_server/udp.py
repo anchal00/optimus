@@ -2,7 +2,7 @@ import socket
 from concurrent import futures
 
 from optimus.dns.handlers import handle_request
-from optimus.logging_config.logger import log
+from optimus.logging.logger import log
 
 
 def run_udp_listener(port: int, worker_threads: int):

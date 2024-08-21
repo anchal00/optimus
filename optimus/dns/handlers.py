@@ -3,11 +3,11 @@ import random
 import socket
 from typing import List, Union
 
-from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.dns_parser import DNSParser
-from optimus.dns.dns_records import AAAA, NS, A, Record, RecordClass, RecordType
-from optimus.logging_config.logger import log
-from optimus.networking.udp_utils import query_server_over_udp
+from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
+from optimus.dns.parser.parse import DNSParser
+from optimus.dns.models.records import AAAA, NS, A, Record, RecordClass, RecordType
+from optimus.logging.logger import log
+from optimus.networking.udp import query_server_over_udp
 
 # TODO: Move to a config file and read from file instead of hardcoding
 ROOT_SERVERS = [

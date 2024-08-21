@@ -2,7 +2,7 @@ import sys
 from argparse import ArgumentParser
 
 from optimus.__version__ import VERSION
-from optimus.optimus_server.server import run_server
+from optimus.optimus_server.udp import run_udp_listener
 
 
 def main(argv):
@@ -32,7 +32,7 @@ def main(argv):
     arg_parser.add_argument("-v", action="store_true", help="Get version info")
     args = arg_parser.parse_args(argv)
     if args.r:
-        run_server(args.p, args.t)
+        run_udp_listener(args.p, args.t)
     elif args.v:
         print(f"Optimus Version: {VERSION}")
     else:

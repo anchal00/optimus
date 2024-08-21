@@ -1,9 +1,9 @@
 from ipaddress import IPv4Address, IPv6Address
 from typing import List, Union
 
-from optimus.bin_data_reader.bin_reader import ByteArrayIterator
-from optimus.dns.dns_packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.dns_records import (
+from optimus.dns.parser.iter import BytearrayIterator
+from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
+from optimus.dns.models.records import (
     AAAA,
     CNAME,
     MX,
@@ -21,7 +21,7 @@ class DNSParser:
     def __init__(self, bin_data: bytearray) -> None:
         if not bin_data:
             raise Exception("No binary data given to parse")
-        self.__iter = ByteArrayIterator(bin_data)
+        self.__iter = BytearrayIterator(bin_data)
 
     def __to_int(self, data: bytearray) -> int:
         value = 0
@@ -48,7 +48,7 @@ class DNSParser:
         return DNSPacket(dns_header, questions, answers, nameserver_records, additional_records)
 
     def __parse_record_name(self) -> str:
-        msb_data: int = self.__iter.parse_bytes_to_int(1)
+        msb_data: int = self.__to_int(self.__iter.get_n_bytes(1))
         if self.__is_label_compressed(msb_data):
             # In this case, the next byte should be treated as OFFSET
             # which specifies the position from where the name has to be
@@ -64,7 +64,7 @@ class DNSParser:
         return bool(label_length ^ 0xC0 == 0)
 
     def __parse_compressed_label(self) -> str:
-        offset: int = self.__iter.get_n_bytes_and_move(1)
+        offset: int = self.__to_int(self.__iter.get_n_bytes_and_move(1))
         cur_ptr_pos: int = self.__iter.get_cur_ptr_pos()
         self.__iter.seek_ptr_pos(offset)
         name: str = self.__parse_sequence_of_labels()
@@ -78,7 +78,7 @@ class DNSParser:
         # 2 MSB bits of the this label_length field are always 0
         # So the label_length can have values between 0 and 63, meaning
         # that the name can take only between 0-63 octets
-        label_length: int = self.__iter.get_n_bytes_and_move(1)
+        label_length: int = self.__to_int(self.__iter.get_n_bytes_and_move(1))
         # Parse sequence of labels to decode the Name
         while label_length != 0:
             if self.__is_label_compressed(label_length):
@@ -86,11 +86,11 @@ class DNSParser:
                 full_name.append(name_str)
                 return ".".join(full_name)
             for _ in range(0, label_length):
-                label: int = self.__iter.get_n_bytes_and_move(1)
+                label: int = self.__to_int(self.__iter.get_n_bytes_and_move(1))
                 name_str = name_str + chr(label)
             full_name.append(name_str)
             name_str = ""
-            label_length = self.__iter.get_n_bytes_and_move(1)
+            label_length = self.__to_int(self.__iter.get_n_bytes_and_move(1))
         return ".".join(full_name)
 
     def __get_dns_header(self) -> DNSHeader:
@@ -139,7 +139,7 @@ class DNSParser:
 
     def __get_ques_section(self, total_questions) -> List[Question]:
         questions: List[Question] = []
-        for _ in range(0, total_questions):
+        for _ in range(total_questions):
             # Parse name
             name: str = self.__parse_record_name()
             # Parse type
@@ -168,13 +168,13 @@ class DNSParser:
             # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
             # ttl = self.__iter.get_n_bytes_and_move(4)
             # length = self.__iter.get_n_bytes_and_move(2)
-            ipv4_addr_int: int = self.__iter.get_n_bytes_and_move(4)
+            ipv4_addr_int: int = self.__to_int(self.__iter.get_n_bytes_and_move(4))
             record = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
         elif rtype.value == RecordType.AAAA.value:
             # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
             # ttl = self.__iter.get_n_bytes_and_move(4)
             # length = self.__iter.get_n_bytes_and_move(2)
-            ipv6_addr_int: int = self.__iter.get_n_bytes_and_move(16)
+            ipv6_addr_int: int = self.__to_int(self.__iter.get_n_bytes_and_move(16))
             record = AAAA(name, rtype, rclass, ttl, length, IPv6Address(ipv6_addr_int))
         elif rtype.value == RecordType.CNAME.value:
             # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))

@@ -1,4 +1,4 @@
-class ByteArrayIterator:
+class BytearrayIterator:
     def __init__(self, data: bytearray) -> None:
         self.__data = data
         self.__ptr = 0
