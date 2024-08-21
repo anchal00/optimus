@@ -4,13 +4,13 @@ from setuptools import find_packages, setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-META: dict = {}
+META: dict[str, str] = {}
 with open(os.path.join(here, "optimus", "__version__.py")) as f:
     exec(f.read(), META)
 
 setup(
     name="optimus",
-    version=META.get("VERSION"),
+    version=META["VERSION"],
     description="A toy DNS server",
     author="Anchal",
     author_email="anchal82199@gmail.com",

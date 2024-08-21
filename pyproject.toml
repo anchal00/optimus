@@ -11,3 +11,8 @@ exclude = [
     'build',  # TOML literal string (single-quotes, no escaping necessary)
     '^\..*',  # TOML basic string (double-quotes, backslash and other characters need escaping)
 ]
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+
