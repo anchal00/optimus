@@ -165,26 +165,14 @@ class DNSParser:
 
         # Parse record acc to RecordType
         if rtype.value == RecordType.A.value:
-            # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
-            # ttl = self.__iter.get_n_bytes_and_move(4)
-            # length = self.__iter.get_n_bytes_and_move(2)
             ipv4_addr_int: int = self.__to_int(self.__iter.get_n_bytes_and_move(4))
             record = A(name, rtype, rclass, ttl, length, IPv4Address(ipv4_addr_int))
         elif rtype.value == RecordType.AAAA.value:
-            # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
-            # ttl = self.__iter.get_n_bytes_and_move(4)
-            # length = self.__iter.get_n_bytes_and_move(2)
             ipv6_addr_int: int = self.__to_int(self.__iter.get_n_bytes_and_move(16))
             record = AAAA(name, rtype, rclass, ttl, length, IPv6Address(ipv6_addr_int))
         elif rtype.value == RecordType.CNAME.value:
-            # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
-            # ttl = self.__iter.get_n_bytes_and_move(4)
-            # length = self.__iter.get_n_bytes_and_move(2)
             record = CNAME(name, rtype, rclass, ttl, length, self.__parse_record_name())
         elif rtype.value == RecordType.MX.value:
-            # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
-            # ttl = self.__iter.get_n_bytes_and_move(4)
-            # length = self.__iter.get_n_bytes_and_move(2)
             record = MX(
                 name,
                 rtype,
@@ -195,14 +183,8 @@ class DNSParser:
                 self.__parse_record_name(),
             )
         elif rtype.value == RecordType.NS.value:
-            # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
-            # ttl = self.__iter.get_n_bytes_and_move(4)
-            # length = self.__iter.get_n_bytes_and_move(2)
             record = NS(name, rtype, rclass, ttl, length, self.__parse_record_name())
         elif rtype.value == RecordType.SOA.value:
-            # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
-            # ttl = self.__iter.get_n_bytes_and_move(4)
-            # length = self.__iter.get_n_bytes_and_move(2)
             record = SOA(
                 name,
                 rtype,
@@ -231,9 +213,6 @@ class DNSParser:
             # )
             record = OptPseudoRR(bytearray(12))
         else:
-            # rclass = RecordClass.from_value(self.__iter.get_n_bytes_and_move(2))
-            # ttl = self.__iter.get_n_bytes_and_move(4)
-            # length = self.__iter.get_n_bytes_and_move(2)
             record = Record(name, rtype, rclass, ttl, length)
         return record
 
