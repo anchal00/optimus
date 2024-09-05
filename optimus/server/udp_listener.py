@@ -1,10 +1,11 @@
 import socket
 from concurrent import futures
-from optimus.server.context import warmup_cache
-from optimus.prometheus import with_prometheus_monitoring
-from optimus.server.router import handle_request
+
 from optimus.logging.logger import log
 from optimus.networking.cache import socket_cache
+from optimus.prometheus import with_prometheus_monitoring
+from optimus.server.context import warmup_cache
+from optimus.server.router import handle_request
 
 
 @with_prometheus_monitoring

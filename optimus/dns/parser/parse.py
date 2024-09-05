@@ -1,20 +1,12 @@
 from ipaddress import IPv4Address, IPv6Address
 from typing import List, Union
 
+from optimus.dns.models.packet import (DNSHeader, DNSPacket, Question,
+                                       ResponseCode)
+from optimus.dns.models.records import (AAAA, CNAME, MX, NS, SOA, A,
+                                        OptPseudoRR, Record, RecordClass,
+                                        RecordType)
 from optimus.dns.parser.iter import BytearrayIterator
-from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.models.records import (
-    AAAA,
-    CNAME,
-    MX,
-    NS,
-    SOA,
-    A,
-    OptPseudoRR,
-    Record,
-    RecordClass,
-    RecordType,
-)
 
 
 class DNSParser:

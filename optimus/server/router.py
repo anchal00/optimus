@@ -1,8 +1,9 @@
 import socket
+
 from optimus.dns.models.packet import DNSPacket, ResponseCode
 from optimus.dns.parser.parse import DNSParser
-from optimus.logging.logger import log
 from optimus.dns.resolver import resolve
+from optimus.logging.logger import log
 from optimus.prometheus import record_metrics
 
 

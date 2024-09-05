@@ -1,10 +1,9 @@
 import json
 import os
-import posixpath
-from typing import List
 import pathlib
+import posixpath
 import socket
-
+from typing import List
 
 __NAMESERVERS: List[str] = []
 

@@ -2,7 +2,6 @@ from prometheus_client import Counter, start_http_server
 
 from optimus.logging.logger import log
 
-
 inbound_rqc = Counter("inbound_requests", "Total Requests Received")
 served_rqc = Counter("served_requests", "Total Requests Processed")
 erred_rqc = Counter("erred_requests", "Total Requests Failed")

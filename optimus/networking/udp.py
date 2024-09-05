@@ -1,8 +1,8 @@
-from typing import Optional
-from optimus.networking.cache import socket_cache
 import socket
+from typing import Optional
 
 from optimus.logging.logger import log_error
+from optimus.networking.cache import socket_cache
 
 
 def query_server_over_udp(bin_data: bytearray, server_addr: str) -> bytes:
