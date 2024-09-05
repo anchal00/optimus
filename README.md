@@ -30,13 +30,5 @@ To workaround this, you may
 
 
 #### [1] Running Optimus with Root privileges:
-
-(There might be better ways to do this, but this is the temporary solution available at the moment)
-
-Once the existing resolver is disabled and Port 53 is freed up
-
-1. Copy the script `INIT` to `/usr/local/bin`
-2. Rename `INIT` to `optimus_server`
-3. Make `optimus_server` executable using `chmod +x /usr/local/bin/optimus_server`
-4. Now you can invoke Optimus using this executable from your terminal simply by running `optimus_server`
-
+1. Grant executable permission to script `run` by running `chmod +x run`.
+2. Execute `./run` to stop systemd resolver daemon and point your system to use optimus

@@ -199,7 +199,7 @@ class DNSParser:
                 self.__to_int(self.__iter.get_n_bytes_and_move(4)),
                 self.__to_int(self.__iter.get_n_bytes_and_move(4)),
             )
-        elif rtype.value == RecordType.OPT_RR.value:
+        elif rtype.value == RecordType.OPT.value:
             # rclass = self.__iter.get_n_bytes_and_move(2)
             # ttl = self.__iter.get_n_bytes_and_move(4)
             # length = self.__iter.get_n_bytes_and_move(2)

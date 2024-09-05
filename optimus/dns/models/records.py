@@ -8,9 +8,15 @@ class RecordType(Enum):  # 2 bytes
     NS = 2  # Name Server : The DNS server address for a domain
     CNAME = 5  # Canonical Name : Maps names to names
     SOA = 6  # Marks the start of a zone of authority
+    PTR = 12  # Pointer record for reverse DNS lookups
     MX = 15  # Mail exchange : The host of the mail server for a domain
+    TXT = 16  # Text record, for storing arbitrary text
     AAAA = 28  # IPv6 alias : IPv6 address of a host
-    OPT_RR = 41  # OPT-pseudo RR or meta RR
+    OPT = 41  # OPT-pseudo RR or meta RR
+    HTTPS = 65
+    URI = 265
+    TEST1 = 65535
+    TEST2 = 0
     UNKNOWN = -1
 
     @classmethod

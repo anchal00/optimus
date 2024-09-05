@@ -1,11 +1,15 @@
 import socket
 from concurrent import futures
-
-from optimus.optimus_server.router import handle_request
+from optimus.server.context import warmup_cache
+from optimus.prometheus import with_prometheus_monitoring
+from optimus.server.router import handle_request
 from optimus.logging.logger import log
+from optimus.networking.cache import socket_cache
 
 
-def run_udp_listener(port: int, worker_threads: int):
+@with_prometheus_monitoring
+@warmup_cache(socket_cache)
+def run_forever(port: int, worker_threads: int):
     master_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     master_socket.bind(("0.0.0.0", port))
     log(f"Started Optimus Server on Port {port}")
