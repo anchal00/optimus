@@ -3,12 +3,12 @@ from concurrent import futures
 
 from optimus.logging.logger import log
 from optimus.networking.cache import socket_cache
-from optimus.prometheus import with_prometheus_monitoring
+from optimus.prometheus import with_prometheus_metrics_server
 from optimus.server.context import warmup_cache
 from optimus.server.router import handle_request
 
 
-@with_prometheus_monitoring
+@with_prometheus_metrics_server
 @warmup_cache(socket_cache)
 def run_forever(port: int, worker_threads: int):
     master_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
