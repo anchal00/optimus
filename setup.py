@@ -15,14 +15,10 @@ setup(
     author="Anchal",
     author_email="anchal82199@gmail.com",
     url="https://github.com/anchal00/optimus",
+    package_data={"optimus": ["*.json"]},
+    include_package_data=True,
     packages=find_packages(include=["optimus", "optimus.*"]),
-    # install_requires=[
-    #     "flake8==6.0.0",
-    #     "isort==5.12.0",
-    #     "mccabe==0.7.0",
-    #     "pycodestyle==2.10.0",
-    #     "pyflakes==3.0.1",
-    # ],
+    install_requires=["prometheus_client==0.20.0"],
     python_requires=">=3.9.6",
     entry_points={
         "console_scripts": [

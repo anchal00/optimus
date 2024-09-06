@@ -3,36 +3,33 @@ import random
 from typing import List, Union
 
 from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.parser.parse import DNSParser
 from optimus.dns.models.records import AAAA, NS, A, Record, RecordClass, RecordType
+from optimus.dns.parser.parse import DNSParser
+from optimus.logging.logger import log_error
 from optimus.networking.udp import query_server_over_udp
-
-# TODO: Move to a config file and read from file instead of hardcoding
-ROOT_SERVERS = [
-    "198.41.0.4",  # a.root-servers.net_ip
-    "199.9.14.201",  # b.root-servers.net_ip
-    "192.33.4.12",  # c.root-servers.net_ip
-    "199.7.91.13",  # d.root-servers.net_ip
-    "192.203.230.10",  # e.root-servers.net_ip
-    "192.5.5.241",  # f.root-servers.net_ip
-    "192.112.36.4",  # g.root-servers.net_ip
-    "198.97.190.53",  # h.root-servers.net_ip
-    "192.36.148.17",  # i.root-servers.net_ip
-    "192.58.128.30",  # j.root-servers.net_ip
-    "193.0.14.129",  # k.root-servers.net_ip
-    "199.7.83.42",  # l.root-servers.net_ip
-    "202.12.27.33",  # m.root-servers.net_ip
-]
+from optimus.server.context import get_root_servers
 
 
 # TODO: Improve logging
 def resolve(qpacket: DNSPacket) -> DNSPacket:
     # Start with first lookup on a random root server
-    server_addr: str = random.choice(ROOT_SERVERS)
+    server_addr: str = random.choice(get_root_servers())
     while True:
-        response_packet: DNSPacket = DNSParser(
-            bytearray(query_server_over_udp(qpacket.to_bin(), server_addr))
-        ).get_dns_packet()
+        _bytes: bytes = query_server_over_udp(qpacket.to_bin(), server_addr)
+        # TODO: Implement retries
+        if not _bytes:
+            log_error(
+                f"Resolution of {qpacket.questions[0].name} TYPE {qpacket.questions[0].rtype} ON {server_addr} failed"
+            )
+            return DNSPacket(
+                DNSHeader(
+                    id=qpacket.header.ID,
+                    question_count=qpacket.header.question_count,
+                    response_code=ResponseCode.SERVFAIL,
+                ),
+                questions=qpacket.questions,
+            )
+        response_packet: DNSPacket = DNSParser(bytearray(_bytes)).get_dns_packet()
         response_code: ResponseCode = response_packet.header.response_code
         # If the server responds with error or if we get the Answer, return the packet as it is
         if response_code.value in [
@@ -53,7 +50,8 @@ def resolve(qpacket: DNSPacket) -> DNSPacket:
             return response_packet
         # Try to find a 'NS' type record with a corresponding 'A' type record in the additional section
         # If found, switch Nameserver and retry the loop i.e perform the lookup on new NameServer again
-        ns_record_set: set[str] = {ns_rec.nsdname for ns_rec in response_packet.nameserver_records}
+        ns_records: List[NS] = list(filter(lambda rec: rec.rtype == RecordType.NS, response_packet.nameserver_records))
+        ns_record_set: set[str] = {ns_rec.nsdname for ns_rec in ns_records}
         additional_records: List[Union[A, AAAA, NS]] = response_packet.additional_records
         if additional_records:
             for ad_rec in additional_records:
@@ -61,8 +59,10 @@ def resolve(qpacket: DNSPacket) -> DNSPacket:
                     server_addr = str(ad_rec.address)
                     break
         else:
+            if not ns_records:
+                return response_packet
             # Pick a random NS record and perform lookup for that
-            ns_record: NS = random.choice(response_packet.nameserver_records)
+            ns_record: NS = random.choice(ns_records)
             packet: DNSPacket = resolve(
                 DNSPacket(
                     dns_header=DNSHeader(

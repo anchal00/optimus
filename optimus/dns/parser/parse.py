@@ -1,20 +1,9 @@
 from ipaddress import IPv4Address, IPv6Address
 from typing import List, Union
 
-from optimus.dns.parser.iter import BytearrayIterator
 from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.models.records import (
-    AAAA,
-    CNAME,
-    MX,
-    NS,
-    SOA,
-    A,
-    OptPseudoRR,
-    Record,
-    RecordClass,
-    RecordType,
-)
+from optimus.dns.models.records import AAAA, CNAME, MX, NS, SOA, A, OptPseudoRR, Record, RecordClass, RecordType
+from optimus.dns.parser.iter import BytearrayIterator
 
 
 class DNSParser:
@@ -199,7 +188,7 @@ class DNSParser:
                 self.__to_int(self.__iter.get_n_bytes_and_move(4)),
                 self.__to_int(self.__iter.get_n_bytes_and_move(4)),
             )
-        elif rtype.value == RecordType.OPT_RR.value:
+        elif rtype.value == RecordType.OPT.value:
             # rclass = self.__iter.get_n_bytes_and_move(2)
             # ttl = self.__iter.get_n_bytes_and_move(4)
             # length = self.__iter.get_n_bytes_and_move(2)
