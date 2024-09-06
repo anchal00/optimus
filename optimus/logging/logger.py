@@ -1,6 +1,6 @@
 import logging
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logging.basicConfig(level=logging.INFO, format="ts=%(asctime)s level=%(levelname)s message=%(message)s")
 
 
 # TODO: Improve logging

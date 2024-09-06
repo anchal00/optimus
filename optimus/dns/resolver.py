@@ -2,13 +2,11 @@ import math
 import random
 from typing import List, Union
 
-from optimus.dns.models.packet import (DNSHeader, DNSPacket, Question,
-                                       ResponseCode)
-from optimus.dns.models.records import (AAAA, NS, A, Record, RecordClass,
-                                        RecordType)
+from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
+from optimus.dns.models.records import AAAA, NS, A, Record, RecordClass, RecordType
 from optimus.dns.parser.parse import DNSParser
 from optimus.networking.udp import query_server_over_udp
-from optimus.optimus_server.context import get_root_servers
+from optimus.server.context import get_root_servers
 
 
 # TODO: Improve logging
@@ -17,6 +15,7 @@ def resolve(qpacket: DNSPacket) -> DNSPacket:
     server_addr: str = random.choice(get_root_servers())
     while True:
         _bytes: bytes = query_server_over_udp(qpacket.to_bin(), server_addr)
+        # TODO: Implement retries
         if not _bytes:
             return DNSPacket(
                 DNSHeader(
