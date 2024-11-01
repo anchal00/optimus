@@ -14,7 +14,7 @@ def run_forever(port: int, worker_threads: int):
     master_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     master_socket.bind(("0.0.0.0", port))
     log(f"Started Optimus Server on Port {port}")
-    # TODO: Test with Process PoolExecutor and EPOLL
+    # TODO: Test with ProcessPoolExecutor and EPOLL
     try:
         with futures.ThreadPoolExecutor(max_workers=worker_threads) as pool:
             while True:
