@@ -30,5 +30,5 @@ To workaround this, you may
 
 
 #### [1] Running Optimus with Root privileges:
-1. Grant executable permission to script `run` by running `chmod +x run`.
-2. Execute `./run` to stop systemd resolver daemon and point your system to use optimus
+1. Grant executable permission to script `boot.sh` by running `chmod +x boot.sh`.
+2. Execute `./boot.sh` to stop systemd resolver daemon and point your system to use optimus
