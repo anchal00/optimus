@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . .
 
 # Install the current package
-RUN pip install .
+RUN pip install --no-cache-dir .
 
 # Command to run the application
 ENTRYPOINT [ "optimus", "-r"]
