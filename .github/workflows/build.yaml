@@ -10,7 +10,7 @@ jobs:
       
       - name: Installing requirements
         run: |
-          pip install -r requirements.txt
+          pip install -r dev_requirements.txt
       
       - name: Run static type checker
         uses: jpetrucciani/mypy-check@master
