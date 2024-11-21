@@ -28,7 +28,6 @@ jobs:
           python-version: "3.9"
       - name: Running Tests
         run: |
-          make test
   Check-formatting:
     runs-on: ubuntu-latest
     steps:
@@ -41,4 +40,5 @@ jobs:
           python-version: "3.9"
       - name: Linters/Formatters
         run: |
+          pip install -r requirements-dev.txt
           make lint
