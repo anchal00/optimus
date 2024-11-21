@@ -17,7 +17,8 @@ jobs:
         run: |
           make build
       - name: Running Tests
-        run: make test
+        run: |
+          make test
       - name: Linters/Formatters:
         run: |
             make lint
