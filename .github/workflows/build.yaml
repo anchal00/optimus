@@ -16,9 +16,29 @@ jobs:
       - name: Building optimus server
         run: |
           make build
+  Test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up Python 3.9
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
       - name: Running Tests
         run: |
           make test
+  Check formatting:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set up Python 3.9
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
       - name: Linters/Formatters
         run: |
           make lint

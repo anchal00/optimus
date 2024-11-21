@@ -29,7 +29,7 @@ lint:
 	black optimus --line-length 120 --check
 	mypy --ignore-missing-imports --show-error-codes optimus tests
 
-test: lint
+test:
 	python -m unittest -v
 
 coverage:

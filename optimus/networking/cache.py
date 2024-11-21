@@ -1,6 +1,5 @@
 import socket
 from typing import Optional
-
 from optimus.utils import SingletonMeta
 
 
