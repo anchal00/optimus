@@ -19,6 +19,6 @@ jobs:
       - name: Running Tests
         run: |
           make test
-      - name: Linters/Formatters:
+      - name: Linters/Formatters
         run: |
-            make lint
+          make lint
