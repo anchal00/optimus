@@ -38,6 +38,7 @@ coverage:
 
 build:
 	pip install .
+	pip install -r requirements-dev.txt
 
 run:
 	./boot.sh -r
