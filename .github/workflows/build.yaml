@@ -29,7 +29,7 @@ jobs:
       - name: Running Tests
         run: |
           make test
-  Check formatting:
+  Check-formatting:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
