@@ -1,11 +1,9 @@
 import math
 import random
-from typing import List, Union
+from typing import List
 
-from optimus.dns.models.packet import (DNSHeader, DNSPacket, Question,
-                                       ResponseCode)
-from optimus.dns.models.records import (AAAA, NS, A, Record, RecordClass,
-                                        RecordType)
+from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
+from optimus.dns.models.records import Record, RecordClass, RecordType
 from optimus.dns.parser.parse import DNSParser
 from optimus.logging.logger import log_error
 from optimus.networking.udp import query_server_over_udp
@@ -52,19 +50,21 @@ def resolve(qpacket: DNSPacket) -> DNSPacket:
             return response_packet
         # Try to find a 'NS' type record with a corresponding 'A' type record in the additional section
         # If found, switch Nameserver and retry the loop i.e perform the lookup on new NameServer again
-        ns_records: List[NS] = list(filter(lambda rec: rec.rtype == RecordType.NS, response_packet.nameserver_records))
+        ns_records: List[Record] = list(
+            filter(lambda rec: rec.rtype == RecordType.NS, response_packet.nameserver_records)
+        )
         ns_record_set: set[str] = {ns_rec.nsdname for ns_rec in ns_records}
-        additional_records: List[Union[A, AAAA, NS]] = response_packet.additional_records
+        additional_records: List[Record] = response_packet.additional_records
         if additional_records:
             for ad_rec in additional_records:
                 if ad_rec.rtype.value == RecordType.A.value and ad_rec.name in ns_record_set:
-                    server_addr = str(ad_rec.address)
+                    server_addr = str(ad_rec.ipv4_address)
                     break
         else:
             if not ns_records:
                 return response_packet
             # Pick a random NS record and perform lookup for that
-            ns_record: NS = random.choice(ns_records)
+            ns_record: Record = random.choice(ns_records)
             packet: DNSPacket = resolve(
                 DNSPacket(
                     dns_header=DNSHeader(
@@ -81,4 +81,4 @@ def resolve(qpacket: DNSPacket) -> DNSPacket:
                 return response_packet
             a_type_record: Record = random.choice(packet.answers)
             # 'A' Type records are present, pick one of them to retry the lookup on new server
-            server_addr = str(a_type_record.address)
+            server_addr = str(a_type_record.ipv4_address)

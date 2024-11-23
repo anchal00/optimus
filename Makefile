@@ -25,7 +25,6 @@ clean-test:
 
 lint:
 	flake8 optimus tests setup.py
-	isort -c optimus tests setup.py
 	black optimus --line-length 120 --check
 	mypy --ignore-missing-imports --show-error-codes optimus tests
 

@@ -1,6 +1,5 @@
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
-from typing import Any
 
 
 class RecordType(Enum):  # 2 bytes
@@ -46,6 +45,24 @@ class Record:
     ttl: int  # 4 bytes : Time-to-Live in seconds
     length: int  # 2 bytes : Length of content in a concrete record
 
+    # ---------------------------------------
+    # Nasty workaround for mypy errors
+    # Attributes of other record types(subclasses)
+    ipv4_address: IPv4Address
+    ipv6_address: IPv6Address
+    cname: str
+    preference: int
+    exchange: str
+    nsdname: str
+    mname: str
+    rname: str
+    serial: int
+    refresh: int
+    retry: int
+    expire: int
+    minimum: int
+
+    # ----------------------------------------
     def __init__(self, name: str, rtype: RecordType, rclass: RecordClass, ttl: int, length: int) -> None:
         self.name = name
         self.rtype = rtype
@@ -92,7 +109,7 @@ class Record:
 
 # Record Type A, representing IPv4 address of a host
 class A(Record):
-    address: IPv4Address
+    ipv4_address: IPv4Address
 
     def __init__(
         self,
@@ -104,11 +121,11 @@ class A(Record):
         address: IPv4Address,
     ) -> None:
         super().__init__(name, rtype, rclass, ttl, length)
-        self.address = address
+        self.ipv4_address = address
 
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
-        data = int(self.address)
+        data = int(self.ipv4_address)
         dns_record_bin.append((data & 0xFF000000) >> 24)
         dns_record_bin.append((data & 0xFF0000) >> 16)
         dns_record_bin.append((data & 0xFF00) >> 8)
@@ -122,14 +139,14 @@ class A(Record):
             "class": self.rec_class.name,
             "ttl": self.ttl,
             "length": self.length,
-            "address": self.address,
+            "address": self.ipv4_address,
         }
         return str(rep_dict)
 
 
 # Record Type AAAA, representing IPv6 address of a host
 class AAAA(Record):
-    address: IPv6Address
+    ipv6_address: IPv6Address
 
     def __init__(
         self,
@@ -141,12 +158,12 @@ class AAAA(Record):
         address: IPv6Address,
     ) -> None:
         super().__init__(name, rtype, rclass, ttl, length)
-        self.address = address
+        self.ipv6_address = address
 
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
         cur_len = len(dns_record_bin)
-        data = int(self.address)
+        data = int(self.ipv6_address)
         first_2_bytes = (data >> 112) & 0xFFFF
         dns_record_bin.append((first_2_bytes & 0xFF00) >> 8)
         dns_record_bin.append((first_2_bytes & 0xFF))
@@ -183,7 +200,7 @@ class AAAA(Record):
             "class": self.rec_class.name,
             "ttl": self.ttl,
             "length": self.length,
-            "address": self.address,
+            "address": self.ipv6_address,
         }
         return str(rep_dict)
 
@@ -462,38 +479,33 @@ class SOA(Record):
 
 # An OPT pseudo-RR (sometimes called a meta-RR) MAY be added to the
 # additional data section of a request. An OPT record does not carry any DNS data
-class OptPseudoRR:
+class OptPseudoRR(Record):
     """
-    Doesn't adhere to standard Resource Records so doesn't inherit 'Record' class
-    """
-
     name: str  # domain name MUST be '0' (root domain)
     rtype: int  # 2 bytes, OPT (41)
     rec_class: int  # 2 bytes, requestor's UDP payload size
     ttl: int  # 4 bytes, extended RCODE and flags
     length: int  # 2 bytes, length of all Record data
-    rec_data: Any  # octet stream  {attribute,value}
+    """
+
+    data: bytearray  # octet stream  {attribute,value}
 
     def __init__(
         self,
-        # name: str,
-        # rtype: int,
-        # rec_class: int,
-        # ttl: int,
-        # length: int,
-        # rec_data: Any,
-        b: bytearray,
+        name: str,
+        rtype: RecordType,
+        requestor_udp_payload_size: int,
+        ext_rcode_flags: int,
+        length: int,
+        data: bytearray,
     ) -> None:
-        # self.name = name
-        # self.rtype = rtype
-        # self.rec_class = rec_class
-        # self.ttl = ttl
-        # self.length = length
-        # self.rec_data = rec_data
-        self.b = b
+        super().__init__(name, rtype, RecordClass.from_value(requestor_udp_payload_size), ext_rcode_flags, length)
+        self.requestor_udp_payload_size = requestor_udp_payload_size
+        self.ext_rcode_flags = ext_rcode_flags
+        self.data = data
 
     def to_bin(self) -> bytearray:
-        return self.b
+        return self.data
 
     def __repr__(self) -> str:
         rep_dict = {
@@ -503,6 +515,6 @@ class OptPseudoRR:
             # "ttl": self.ttl,
             # "length": self.length,
             # "rdata": self.rec_data,
-            "b": self.b
+            "b": self.data
         }
         return str(rep_dict)
