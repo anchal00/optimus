@@ -105,6 +105,7 @@ class TestDnsParser(unittest.TestCase):
             self.assertEqual(query_packet.questions[0].name, dns_packet_data.domain)
             self.assertEqual(query_packet.questions[0].rtype, record_type)
             self.assertEqual(query_packet.questions[0].qclass, RecordClass.IN)
+            # TODO: serialize the query_packet again and match with query_packet_hex
 
     def test_deserialize_response_packet(self):
         for record_type, dns_packet_data in self.DNS_RESPONSE_PACKET_FIXTURES.items():
@@ -138,3 +139,4 @@ class TestDnsParser(unittest.TestCase):
                 self.assertIsNotNone(answer.retry)
                 self.assertIsNotNone(answer.expire)
                 self.assertIsNotNone(answer.minimum)
+            # TODO: serialize the response_packet again and match with response_packet_hex
