@@ -1,6 +1,7 @@
 import binascii
 import unittest
 from collections import namedtuple
+
 from optimus.dns.models.packet import DNSPacket
 from optimus.dns.models.records import RecordClass, RecordType
 from optimus.dns.parser.parse import DNSParser

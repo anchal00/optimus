@@ -2,8 +2,10 @@ import math
 import random
 from typing import List, Union
 
-from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.models.records import AAAA, NS, A, Record, RecordClass, RecordType
+from optimus.dns.models.packet import (DNSHeader, DNSPacket, Question,
+                                       ResponseCode)
+from optimus.dns.models.records import (AAAA, NS, A, Record, RecordClass,
+                                        RecordType)
 from optimus.dns.parser.parse import DNSParser
 from optimus.logging.logger import log_error
 from optimus.networking.udp import query_server_over_udp
