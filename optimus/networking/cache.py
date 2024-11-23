@@ -1,17 +1,10 @@
 import socket
 from typing import Optional
 
-
-class SocketCacheMeta(type):
-    __INSTANCE: dict[str, "SocketCache"] = dict()
-
-    def __new__(cls, cls_name, cls_bases, cls_attrs):
-        if cls_name not in cls.__INSTANCE:
-            cls.__INSTANCE[cls_name] = type(cls_name, cls_bases, cls_attrs)
-        return cls.__INSTANCE[cls_name]
+from optimus.utils import SingletonMeta
 
 
-class SocketCache(metaclass=SocketCacheMeta):
+class SocketCache(metaclass=SingletonMeta):
     def __init__(
         self,
     ) -> None:

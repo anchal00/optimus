@@ -1,8 +1,11 @@
 from ipaddress import IPv4Address, IPv6Address
-from typing import List, Union
+from typing import List, Optional, Union
 
-from optimus.dns.models.packet import DNSHeader, DNSPacket, Question, ResponseCode
-from optimus.dns.models.records import AAAA, CNAME, MX, NS, SOA, A, OptPseudoRR, Record, RecordClass, RecordType
+from optimus.dns.models.packet import (DNSHeader, DNSPacket, Question,
+                                       ResponseCode)
+from optimus.dns.models.records import (AAAA, CNAME, MX, NS, SOA, A,
+                                        OptPseudoRR, Record, RecordClass,
+                                        RecordType)
 from optimus.dns.parser.iter import BytearrayIterator
 
 
@@ -20,10 +23,10 @@ class DNSParser:
 
     def get_dns_packet(self) -> DNSPacket:
         dns_header: DNSHeader = self.__get_dns_header()
-        questions: List[Question] = self.__get_ques_section(dns_header.question_count)
-        answers: List[Record] = []
-        nameserver_records: List[NS] = []
-        additional_records: List[Union[A, AAAA, NS]] = []
+        questions = self.__get_ques_section(dns_header.question_count)
+        answers = []
+        nameserver_records = []
+        additional_records: Optional[List[Union[A, AAAA, NS, CNAME]]] = []
         if not dns_header.is_query:
             if dns_header.answer_count > 0:
                 answers = self.__get_ans_section(dns_header.answer_count)
@@ -140,7 +143,7 @@ class DNSParser:
 
     def __read_response_records(
         self,
-    ) -> Union[Record, A, AAAA, CNAME, MX, NS, SOA, OptPseudoRR]:
+    ) -> Union[A, AAAA, CNAME, MX, NS, SOA]:
         name: str = self.__parse_record_name()
         rtype: RecordType = RecordType.from_value(self.__to_int(self.__iter.get_n_bytes_and_move(2)))
         rclass: RecordClass = RecordClass.from_value(self.__to_int(self.__iter.get_n_bytes_and_move(2)))
@@ -205,20 +208,20 @@ class DNSParser:
             record = Record(name, rtype, rclass, ttl, length)
         return record
 
-    def __get_ans_section(self, total_answers: int) -> List[Record]:
-        answers: List[Record] = []
-        for _ in range(0, total_answers):
+    def __get_ans_section(self, total_answers: int) -> List[Union[A, AAAA, SOA, NS, MX, CNAME]]:
+        answers = []
+        for _ in range(total_answers):
             answers.append(self.__read_response_records())
         return answers
 
-    def __get_additional_section(self, additional_records_count: int) -> List[Union[A, AAAA, NS]]:
-        ad_records: List[Union[A, AAAA, NS]] = []
-        for _ in range(0, additional_records_count):
+    def __get_additional_section(self, additional_records_count: int) -> Optional[List[Union[A, AAAA, NS, CNAME]]]:
+        ad_records: Optional[List[Union[A, AAAA, NS, CNAME]]] = []
+        for _ in range(additional_records_count):
             ad_records.append(self.__read_response_records())
         return ad_records
 
-    def __get_authoritative_section(self, nameserver_records_count: int) -> List[NS]:
-        ns_records: List[Record] = []
-        for _ in range(0, nameserver_records_count):
+    def __get_authoritative_section(self, nameserver_records_count: int) -> List[Union[NS, SOA]]:
+        ns_records = []
+        for _ in range(nameserver_records_count):
             ns_records.append(self.__read_response_records())
         return ns_records

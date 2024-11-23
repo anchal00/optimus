@@ -1,7 +1,8 @@
 from enum import Enum
 from typing import List, Optional, Union
 
-from optimus.dns.models.records import AAAA, NS, SOA, A, Record, RecordClass, RecordType
+from optimus.dns.models.records import (AAAA, CNAME, MX, NS, SOA, A,
+                                        RecordClass, RecordType)
 
 
 class ResponseCode(Enum):  # 4 bits
@@ -168,9 +169,9 @@ class DNSPacket:
         self,
         dns_header: DNSHeader,
         questions: List[Question],
-        answers: Optional[List[Record]] = None,
+        answers: Optional[List[Union[A, AAAA, SOA, NS, MX, CNAME]]] = None,
         nameserver_records: Optional[List[Union[NS, SOA]]] = None,
-        additional_records: Optional[List[Union[A, AAAA, NS]]] = None,
+        additional_records: Optional[List[Union[A, AAAA, NS, CNAME]]] = None,
     ) -> None:
         self.header = dns_header
         self.questions = questions if questions else []

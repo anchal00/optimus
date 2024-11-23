@@ -29,7 +29,7 @@ lint:
 	black optimus --line-length 120 --check
 	mypy --ignore-missing-imports --show-error-codes optimus tests
 
-test: lint
+test:
 	python -m unittest -v
 
 coverage:
@@ -38,6 +38,7 @@ coverage:
 
 build:
 	pip install .
+	pip install -r requirements-dev.txt
 
 run:
 	./boot.sh -r
