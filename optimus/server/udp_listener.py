@@ -37,9 +37,9 @@ class UdpServer(metaclass=SingletonMeta):
     def __handle_request(self, received_bytes: bytes, return_address: tuple[str, int]) -> bool:
         query_packet: DNSPacket = DNSParser(bytearray(received_bytes)).get_dns_packet()
         log(f"Received query for {query_packet.questions[0].name} TYPE {query_packet.questions[0].rtype}")
-        if query_packet.questions[0].name.split(".")[-1] == "hgu_lan":
-            self.__master_socket.sendto(b"", return_address)
-            return True
+        # if query_packet.questions[0].name.split(".")[-1] == "hgu_lan":
+        #     self.__master_socket.sendto(b"", return_address)
+        #     return True
         response_packet: DNSPacket = resolve(query_packet)
         response_packet.header.is_recursion_available = True
         self.__master_socket.sendto(response_packet.to_bin(), return_address)

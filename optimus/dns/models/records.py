@@ -38,6 +38,18 @@ class RecordClass(Enum):  # 2 bytes
         return RecordClass.UNKNOWN
 
 
+def to_n_bytes(data: int, n: int) -> bytearray:
+    """Given an integer, converts it to a bytearray of size n"""
+    ret = bytearray()
+    mask = 0xFF
+    for i in range(n):
+        right_shift_by_bits = 8 * i
+        temp = (data >> right_shift_by_bits) & mask
+        ret.append(temp)
+    ret.reverse()
+    return ret
+
+
 class Record:
     name: str
     rtype: RecordType
@@ -81,19 +93,13 @@ class Record:
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
         # Set Type (In 2 byte format)
-        dns_record_bin.append((self.rtype.value & 0xFF00) >> 8)
-        dns_record_bin.append(self.rtype.value & 0xFF)
+        dns_record_bin.extend(to_n_bytes(self.rtype.value, 2))
         # Set Class (In 2 byte format)
-        dns_record_bin.append((self.rec_class.value & 0xFF00) >> 8)
-        dns_record_bin.append(self.rec_class.value & 0xFF)
+        dns_record_bin.extend(to_n_bytes(self.rec_class.value, 2))
         # Set TTL
-        dns_record_bin.append((self.ttl & 0xFF000000) >> 24)
-        dns_record_bin.append((self.ttl & 0xFF0000) >> 16)
-        dns_record_bin.append((self.ttl & 0xFF00) >> 8)
-        dns_record_bin.append(self.ttl & 0xFF)
+        dns_record_bin.extend(to_n_bytes(self.ttl, 4))
         # Set Length
-        dns_record_bin.append((self.length & 0xFF00) >> 8)
-        dns_record_bin.append(self.length & 0xFF)
+        dns_record_bin.extend(to_n_bytes(self.length, 2))
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -126,10 +132,7 @@ class A(Record):
     def to_bin(self) -> bytearray:
         dns_record_bin: bytearray = super().to_bin()
         data = int(self.ipv4_address)
-        dns_record_bin.append((data & 0xFF000000) >> 24)
-        dns_record_bin.append((data & 0xFF0000) >> 16)
-        dns_record_bin.append((data & 0xFF00) >> 8)
-        dns_record_bin.append((data & 0xFF))
+        dns_record_bin.extend(to_n_bytes(data, 4))
         return dns_record_bin
 
     def __repr__(self) -> str:
@@ -164,30 +167,7 @@ class AAAA(Record):
         dns_record_bin: bytearray = super().to_bin()
         cur_len = len(dns_record_bin)
         data = int(self.ipv6_address)
-        first_2_bytes = (data >> 112) & 0xFFFF
-        dns_record_bin.append((first_2_bytes & 0xFF00) >> 8)
-        dns_record_bin.append((first_2_bytes & 0xFF))
-        second_2_bytes = (data >> 96) & 0xFFFF
-        dns_record_bin.append((second_2_bytes & 0xFF00) >> 8)
-        dns_record_bin.append((second_2_bytes & 0xFF))
-        third_2_bytes = (data >> 80) & 0xFFFF
-        dns_record_bin.append((third_2_bytes & 0xFF00) >> 8)
-        dns_record_bin.append((third_2_bytes & 0xFF))
-        fourth_2_bytes = (data >> 64) & 0xFFFF
-        dns_record_bin.append((fourth_2_bytes & 0xFF00) >> 8)
-        dns_record_bin.append((fourth_2_bytes & 0xFF))
-        fifth_2_bytes = (data >> 48) & 0xFFFF
-        dns_record_bin.append((fifth_2_bytes & 0xFF00) >> 8)
-        dns_record_bin.append((fifth_2_bytes & 0xFF))
-        sixth_2_bytes = (data >> 32) & 0xFFFF
-        dns_record_bin.append((sixth_2_bytes & 0xFF00) >> 8)
-        dns_record_bin.append((sixth_2_bytes & 0xFF))
-        seventh_2_bytes = (data >> 16) & 0xFFFF
-        dns_record_bin.append((seventh_2_bytes & 0xFF00) >> 8)
-        dns_record_bin.append((seventh_2_bytes & 0xFF))
-        eighth_2_bytes = data & 0xFFFF
-        dns_record_bin.append((eighth_2_bytes & 0xFF00) >> 8)
-        dns_record_bin.append((eighth_2_bytes & 0xFF))
+        dns_record_bin.extend(to_n_bytes(data, 16))
         # Modify length to reflect the actual bytes present in the record
         dns_record_bin[cur_len - 2] = (self.length & 0xFF00) >> 8
         dns_record_bin[cur_len - 1] = self.length & 0xFF
@@ -354,30 +334,24 @@ class SOA(Record):
     # Domain name of the name server that was the
     # original or primary source of data for this zone.
     mname: str
-
     # Domain name which specifies the mailbox of the
     # person responsible for this zone
     rname: str
-
     # The unsigned 32 bit version number of the original copy
     # of the zone.  Zone transfers preserve this value.  This
     # value wraps and should be compared using sequence space
     # arithmetic
     serial: int
-
     # A 32 bit time interval before the zone should be
     # refreshed
     refresh: int
-
     # A 32 bit time interval that should elapse before a
     # failed refresh should be retried
     retry: int
-
     # A 32 bit time value that specifies the upper limit on
     # the time interval that can elapse before the zone is no
     # longer authoritative
     expire: int
-
     # The unsigned 32 bit minimum TTL field that should be
     # exported with any RR from this zone
     minimum: int
@@ -426,32 +400,11 @@ class SOA(Record):
                 data = ord(ch) if ch != "." else 0
                 dns_record_bin.append(data)
         dns_record_bin.append(0)
-
-        dns_record_bin.append((self.serial & 0xFF000000) >> 24)
-        dns_record_bin.append((self.serial & 0xFF0000) >> 16)
-        dns_record_bin.append((self.serial & 0xFF00) >> 8)
-        dns_record_bin.append(self.serial & 0xFF)
-
-        dns_record_bin.append((self.refresh & 0xFF000000) >> 24)
-        dns_record_bin.append((self.refresh & 0xFF0000) >> 16)
-        dns_record_bin.append((self.refresh & 0xFF00) >> 8)
-        dns_record_bin.append(self.refresh & 0xFF)
-
-        dns_record_bin.append((self.retry & 0xFF000000) >> 24)
-        dns_record_bin.append((self.retry & 0xFF0000) >> 16)
-        dns_record_bin.append((self.retry & 0xFF00) >> 8)
-        dns_record_bin.append(self.retry & 0xFF)
-
-        dns_record_bin.append((self.expire & 0xFF000000) >> 24)
-        dns_record_bin.append((self.expire & 0xFF0000) >> 16)
-        dns_record_bin.append((self.expire & 0xFF00) >> 8)
-        dns_record_bin.append(self.expire & 0xFF)
-
-        dns_record_bin.append((self.minimum & 0xFF000000) >> 24)
-        dns_record_bin.append((self.minimum & 0xFF0000) >> 16)
-        dns_record_bin.append((self.minimum & 0xFF00) >> 8)
-        dns_record_bin.append(self.minimum & 0xFF)
-
+        dns_record_bin.extend(to_n_bytes(self.serial, 4))
+        dns_record_bin.extend(to_n_bytes(self.refresh, 4))
+        dns_record_bin.extend(to_n_bytes(self.retry, 4))
+        dns_record_bin.extend(to_n_bytes(self.expire, 4))
+        dns_record_bin.extend(to_n_bytes(self.minimum, 4))
         new_len = len(dns_record_bin)
         self.length = new_len - cur_len
         # Modify length to reflect the actual bytes present in the record
@@ -515,6 +468,6 @@ class OptPseudoRR(Record):
             # "ttl": self.ttl,
             # "length": self.length,
             # "rdata": self.rec_data,
-            "b": self.data
+            "data": self.data
         }
         return str(rep_dict)

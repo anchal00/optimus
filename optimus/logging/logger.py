@@ -8,5 +8,9 @@ def log(message):
     logging.info(msg=message)
 
 
+def log_debug(message):
+    logging.debug(msg=message)
+
+
 def log_error(message):
     logging.error(msg=message)

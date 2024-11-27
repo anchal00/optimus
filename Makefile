@@ -39,5 +39,8 @@ build:
 	pip install .
 	pip install -r requirements-dev.txt
 
+dev:
+	pip install -e .
+
 run:
 	./boot.sh -r

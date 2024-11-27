@@ -1,7 +1,7 @@
 import socket
 from typing import Optional
 
-from optimus.logging.logger import log_error
+from optimus.logging.logger import log_debug, log_error
 from optimus.networking.cache import socket_cache
 
 
@@ -11,7 +11,7 @@ def query_server_over_udp(payload: bytearray, server_addr: str) -> bytes:
     try:
         if not sock:
             is_root_server = False
-            log_error(f"Upstream DNS server {server_addr} socket cache miss")
+            log_debug(f"Upstream DNS server {server_addr} socket cache miss")
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.settimeout(5)
             sock.connect((server_addr, 53))
