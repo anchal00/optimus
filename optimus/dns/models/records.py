@@ -1,6 +1,8 @@
 from enum import Enum
 from ipaddress import IPv4Address, IPv6Address
 
+from optimus.utils import to_n_bytes
+
 
 class RecordType(Enum):  # 2 bytes
     A = 1  # Alias : IPv4 address of a host
@@ -36,18 +38,6 @@ class RecordClass(Enum):  # 2 bytes
             if rec.value == value:
                 return rec
         return RecordClass.UNKNOWN
-
-
-def to_n_bytes(data: int, n: int) -> bytearray:
-    """Given an integer, converts it to a bytearray of size n"""
-    ret = bytearray()
-    mask = 0xFF
-    for i in range(n):
-        right_shift_by_bits = 8 * i
-        temp = (data >> right_shift_by_bits) & mask
-        ret.append(temp)
-    ret.reverse()
-    return ret
 
 
 class Record:

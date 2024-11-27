@@ -2,6 +2,7 @@ from enum import Enum
 from typing import List, Optional
 
 from optimus.dns.models.records import Record, RecordClass, RecordType
+from optimus.utils import to_n_bytes
 
 
 class ResponseCode(Enum):  # 4 bits
@@ -54,11 +55,9 @@ class Question:
                 dns_question_bin.append(data)
         dns_question_bin.append(0)
         # Set Type (In 2 byte format)
-        dns_question_bin.append((self.rtype.value & 0xFF00) >> 8)
-        dns_question_bin.append(self.rtype.value & 0xFF)
+        dns_question_bin.extend(to_n_bytes(self.rtype.value, 2))
         # Set Class (In 2 byte format)
-        dns_question_bin.append((self.qclass.value & 0xFF00) >> 8)
-        dns_question_bin.append(self.qclass.value & 0xFF)
+        dns_question_bin.extend(to_n_bytes(self.qclass.value, 2))
         return dns_question_bin
 
     def __repr__(self) -> str:
@@ -86,32 +85,25 @@ class DNSHeader:
     additional_records_count: int  # 2 bytes
 
     def to_bin(self) -> bytearray:
-        dns_header_bin: bytearray = bytearray(12)
+        dns_header_bin: bytearray = bytearray()
         # Represent Id in 2 byte format
-        id_msbyte: int = (self.ID & 0xFF00) >> 8
-        id_lsbyte: int = self.ID & 0xFF
-        dns_header_bin[0] = id_msbyte
-        dns_header_bin[1] = id_lsbyte
+        dns_header_bin.extend(to_n_bytes(self.ID, 2))
         # Set QR, RD
-        data = (0 if self.is_query else 1) << 7
-        data = data | (1 if self.is_recursion_desired else 0)
-        dns_header_bin[2] = data
-        data = (1 if self.is_recursion_available else 0) << 7
+        qr_rd_flags = int(not self.is_query) << 7
+        qr_rd_flags |= int(self.is_recursion_desired)
+        dns_header_bin.append(qr_rd_flags)
+        data = int(self.is_recursion_available) << 7
         data = data | (self.z_flag << 4)
         data = data | self.response_code.value
-        dns_header_bin[3] = data
+        dns_header_bin.append(data)
         # Set Question Count
-        dns_header_bin[4] = (self.question_count & 0xFF00) >> 8
-        dns_header_bin[5] = self.question_count & 0xFF
+        dns_header_bin.extend(to_n_bytes(self.question_count, 2))
         # Set Answer Count
-        dns_header_bin[6] = (self.answer_count & 0xFF00) >> 8
-        dns_header_bin[7] = self.answer_count & 0xFF
+        dns_header_bin.extend(to_n_bytes(self.answer_count, 2))
         # Set NS Records Count
-        dns_header_bin[8] = (self.nameserver_records_count & 0xFF00) >> 8
-        dns_header_bin[9] = self.nameserver_records_count & 0xFF
+        dns_header_bin.extend(to_n_bytes(self.nameserver_records_count, 2))
         # Set Additional Records Count
-        dns_header_bin[10] = (self.additional_records_count & 0xFF00) >> 8
-        dns_header_bin[11] = self.additional_records_count & 0xFF
+        dns_header_bin.extend(to_n_bytes(self.additional_records_count, 2))
         return dns_header_bin
 
     def __init__(
