@@ -10,6 +10,7 @@ fi
 
 # Stop systemd resolver daemon
 eval $(sudo systemctl stop systemd-resolved.service)
+echo "WARNING: systemd-resolved has been disabled !!"
 
 # Configure your local dns resolver to point to optimus
 eval $(sed s/127.0.0.53/127.0.0.1/g /run/systemd/resolve/stub-resolv.conf > stub-resolv.conf)
@@ -17,3 +18,6 @@ eval $(sudo mv stub-resolv.conf /run/systemd/resolve/stub-resolv.conf)
 
 sudo $(which optimus) "$@"
 
+echo "Re-enabling systemd-resolved..."
+eval $(sudo systemctl start systemd-resolved.service)
+echo "Finished execution"

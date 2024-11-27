@@ -122,8 +122,10 @@ class TestDnsParser(unittest.TestCase):
             self.assertEqual(answer.rtype, record_type)
             self.assertTrue(answer.ttl > 0)
             self.assertEqual(answer.rec_class, RecordClass.IN)
-            if record_type in (RecordType.A, RecordType.AAAA):
-                self.assertIsNotNone(answer.address)
+            if record_type == RecordType.A:
+                self.assertIsNotNone(answer.ipv4_address)
+            if record_type == RecordType.AAAA:
+                self.assertIsNotNone(answer.ipv6_address)
             if record_type == RecordType.CNAME:
                 self.assertIsNotNone(answer.cname)
             if record_type == RecordType.MX:
